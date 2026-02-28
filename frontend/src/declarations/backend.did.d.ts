@@ -26,17 +26,24 @@ export interface ClinicInput {
   'phone' : string,
   'bookingUrl' : string,
 }
-export interface HeroSettings {
-  'showConnectionLines' : boolean,
-  'backgroundEffect' : string,
+export interface IdleHeroSettings {
+  'heroHeight' : { 'normal' : null },
+  'glassmorphismIntensity' : number,
+  'backgroundBlur' : boolean,
+  'particlePreset' : string,
+  'particleMaxSize' : number,
+  'particleOpacity' : number,
+  'bgGradientStart' : string,
   'particleColor' : string,
   'particleCount' : bigint,
-  'heroGradientStart' : string,
+  'mouseParallaxEnabled' : boolean,
+  'animationSpeed' : number,
   'particleSpeed' : number,
-  'heroGradientEnd' : string,
-  'mouseInteraction' : boolean,
-  'particleSize' : number,
-  'glassmorphismEnabled' : boolean,
+  'particleMinSize' : number,
+  'overlayOpacity' : number,
+  '_version' : bigint,
+  'bgGradientEnd' : string,
+  'textColor' : string,
 }
 export interface Images {
   'heroBackgroundUrl' : string,
@@ -56,7 +63,6 @@ export interface ServiceInput {
 }
 export interface SocialLink { 'url' : string, 'platform' : string }
 export interface SocialLinkInput { 'url' : string, 'platform' : string }
-export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -107,7 +113,7 @@ export interface _SERVICE {
     {
       'clinics' : Array<[bigint, Clinic]>,
       'headerImageUrl' : string,
-      'heroSettings' : HeroSettings,
+      'heroSettings' : IdleHeroSettings,
       'siteTitle' : string,
       'aboutImageBase64' : string,
       'aboutSection' : string,
@@ -121,21 +127,18 @@ export interface _SERVICE {
   >,
   'getAllServices' : ActorMethod<[], Array<[bigint, Service]>>,
   'getAllSocialLinks' : ActorMethod<[], Array<[bigint, SocialLink]>>,
-  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [{ 'name' : string }]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getFooterContent' : ActorMethod<[], string>,
   'getHeaderImageBase64' : ActorMethod<[], string>,
-  'getHeroSettings' : ActorMethod<[], HeroSettings>,
+  'getHeroSettings' : ActorMethod<[], IdleHeroSettings>,
   'getImages' : ActorMethod<[], Images>,
   'getServiceIconBase64' : ActorMethod<[bigint], string>,
   'getSiteTitle' : ActorMethod<[], string>,
-  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [{ 'name' : string }]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  /**
-   * / Login with username/password; returns a session token on success.
-   */
   'login' : ActorMethod<[string, string], string>,
-  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[{ 'name' : string }], undefined>,
   'updateAboutImageBase64' : ActorMethod<[string, string], undefined>,
   'updateAboutSection' : ActorMethod<[string, string, string], undefined>,
   'updateClinic' : ActorMethod<[bigint, ClinicInput, string], undefined>,
@@ -145,7 +148,7 @@ export interface _SERVICE {
     [string, string, string],
     undefined
   >,
-  'updateHeroSettings' : ActorMethod<[HeroSettings, string], undefined>,
+  'updateHeroSettings' : ActorMethod<[IdleHeroSettings, string], undefined>,
   'updateService' : ActorMethod<[bigint, ServiceInput, string], undefined>,
   'updateServiceIconBase64' : ActorMethod<[bigint, string, string], undefined>,
   'updateSiteTitle' : ActorMethod<[string, string], undefined>,
@@ -170,9 +173,6 @@ export interface _SERVICE {
     ],
     undefined
   >,
-  /**
-   * / Validates a session token (public, read-only check).
-   */
   'validateSessionToken' : ActorMethod<[string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

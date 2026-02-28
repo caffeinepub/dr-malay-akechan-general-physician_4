@@ -1,91 +1,109 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T08:03:35.008Z",
+  "generatedAt": "2026-02-28T15:04:46.336Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 4,
-    "implemented": 0,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Hide any public-facing section (About, Clinics, Services, Social Media) entirely when it has no content. A section is considered empty if it has no items (for list-based sections) or no meaningful text/image (for single-content sections). Empty sections must be invisible to visitors — no placeholder, no skeleton, no empty card grid.",
-        "status": "missing",
+        "summary": "Redesign the Footer component to be advanced, structured, and visually consistent with the rest of the UI (warm neutral tones, teal accents, card-based aesthetic). The footer should include multiple columns: a branding/bio column, a quick navigation links column, a contact/clinic info column, and a social media links column. Add a bottom bar with copyright text and a divider. Match typography, color tokens, and spacing conventions used in Header and section components.",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/MainPage.tsx",
-          "frontend/src/pages/About.tsx",
-          "frontend/src/pages/Clinics.tsx",
-          "frontend/src/pages/Services.tsx",
-          "frontend/src/pages/SocialMedia.tsx"
+          "frontend/src/components/Footer.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/components/Footer.tsx"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "Redesign the overall public-facing UI and admin interface with a professional, doctor-oriented aesthetic. Apply a clean medical-grade design system: crisp white and deep charcoal tones with a trusted clinical accent (e.g., teal or soft emerald), refined typography using Space Grotesk for headings and Inter for body text, precise spacing, and subtle micro-interactions. The design must convey authority, precision, and trust — appropriate for a medical professional's digital presence.",
-        "status": "missing",
+        "summary": "Import the Roboto font from Google Fonts (in index.html and/or index.css) and apply it as the primary font for all headings (h1–h6) and section titles across the entire application, including the Header, Hero section, About, Services, Clinics, SocialMedia pages, and Footer. Update the Tailwind config fontFamily to reference Roboto for the heading/display font stack.",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/tailwind.config.js",
+          "frontend/index.html",
           "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Header.tsx",
           "frontend/src/pages/Home.tsx",
           "frontend/src/pages/About.tsx",
-          "frontend/src/pages/Clinics.tsx",
           "frontend/src/pages/Services.tsx",
+          "frontend/src/pages/Clinics.tsx",
           "frontend/src/pages/SocialMedia.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/components/Header.tsx"
+          "frontend/src/components/Footer.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/index.html",
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/pages/Home.tsx",
+          "frontend/src/pages/About.tsx",
+          "frontend/src/pages/Services.tsx",
+          "frontend/src/pages/Clinics.tsx",
+          "frontend/src/pages/SocialMedia.tsx",
+          "frontend/src/components/Footer.tsx"
+        ]
       },
       {
         "id": "REQ-3",
-        "summary": "Apply glassmorphism (frosted glass) effects consistently across cards, modals, navigation, and panel surfaces throughout both the public site and the admin dashboard. Glass panels should use semi-transparent backgrounds with backdrop blur, a subtle light border, and a soft inner glow. Ensure legibility of text on all glass surfaces in both light and dark contexts.",
-        "status": "missing",
+        "summary": "Expand the HeroSettingsEditor admin component into a powerful, comprehensive hero theme settings panel. It should include: gradient start and end color pickers, overlay opacity slider, text color selector, background blur toggle, glassmorphism intensity slider, hero height selector (options: compact/normal/full-screen), animation speed control, enable/disable mouse parallax toggle, and a live preview thumbnail of the combined settings. Persist all new fields via the updateHeroSettings backend mutation and ensure the Home/Hero page reads and applies all settings.",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/GlassCard.tsx",
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/AdminDashboard.tsx",
-          "frontend/src/components/admin/AboutEditor.tsx",
-          "frontend/src/components/admin/ClinicsManager.tsx",
-          "frontend/src/components/admin/ServicesManager.tsx",
-          "frontend/src/components/admin/SocialLinksManager.tsx",
-          "frontend/src/components/admin/HeaderEditor.tsx",
-          "frontend/src/components/admin/FooterEditor.tsx",
           "frontend/src/components/admin/HeroSettingsEditor.tsx",
-          "frontend/src/components/admin/ImagesManager.tsx",
-          "frontend/src/components/ClinicCard.tsx",
-          "frontend/src/pages/About.tsx",
-          "frontend/src/pages/Services.tsx",
-          "frontend/src/pages/SocialMedia.tsx"
+          "frontend/src/pages/Home.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/components/admin/HeroSettingsEditor.tsx",
+          "frontend/src/pages/Home.tsx"
+        ]
       },
       {
         "id": "REQ-4",
-        "summary": "Redesign the AdminDashboard into a powerful, smart admin interface. The sidebar should be structured with clear section groupings and icons, display active state clearly, and feel like a professional CMS control panel. The content area should use card-based editors with clear visual hierarchy, inline status indicators (saved, unsaved changes), and section health indicators showing which sections are currently empty vs. populated.",
-        "status": "missing",
+        "summary": "Implement an advanced particle effect selection system in the HeroSettingsEditor admin panel. Provide a gallery/grid of named particle presets the admin can choose from, including at minimum: None, Floating Dots, Stars, Snow, Bubbles, Geometric Shapes, DNA Helix, Medical Pulse, Confetti, and Fireflies. Each preset should display a small animated preview thumbnail. Additionally, expose fine-tuning controls for the selected preset: particle count slider, particle size range, particle speed slider, particle color picker, and particle opacity slider. Implement the actual particle animations in the ParticleCanvas component on the hero section using canvas-based or CSS animation rendering.",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/AdminDashboard.tsx",
-          "frontend/src/components/admin/AboutEditor.tsx",
-          "frontend/src/components/admin/ClinicsManager.tsx",
-          "frontend/src/components/admin/ServicesManager.tsx",
-          "frontend/src/components/admin/SocialLinksManager.tsx",
-          "frontend/src/components/admin/HeaderEditor.tsx",
-          "frontend/src/components/admin/FooterEditor.tsx",
           "frontend/src/components/admin/HeroSettingsEditor.tsx",
-          "frontend/src/components/admin/ImagesManager.tsx"
+          "frontend/src/components/ParticleCanvas.tsx",
+          "frontend/src/pages/Home.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/components/admin/HeroSettingsEditor.tsx",
+          "frontend/src/components/ParticleCanvas.tsx",
+          "frontend/src/pages/Home.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/index.html",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/components/ParticleCanvas.tsx",
+    "frontend/src/components/admin/HeroSettingsEditor.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/pages/About.tsx",
+    "frontend/src/pages/Clinics.tsx",
+    "frontend/src/pages/Home.tsx",
+    "frontend/src/pages/Services.tsx",
+    "frontend/src/pages/SocialMedia.tsx",
+    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

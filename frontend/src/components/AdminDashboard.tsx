@@ -1,210 +1,194 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard,
-  Image,
-  Type,
-  User,
-  MapPin,
-  Wrench,
-  Share2,
-  FileText,
-  Settings,
-  LogOut,
-  ChevronRight,
-  Zap,
+  LayoutDashboard, FileText, Stethoscope, MapPin, Share2,
+  Image, Settings, LogOut, ChevronRight, Menu, X
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useGetAllContent } from '../hooks/useQueries';
-import HeroSettingsEditor from './admin/HeroSettingsEditor';
-import ImagesManager from './admin/ImagesManager';
-import HeaderEditor from './admin/HeaderEditor';
 import AboutEditor from './admin/AboutEditor';
 import ClinicsManager from './admin/ClinicsManager';
 import ServicesManager from './admin/ServicesManager';
 import SocialLinksManager from './admin/SocialLinksManager';
 import FooterEditor from './admin/FooterEditor';
+import HeaderEditor from './admin/HeaderEditor';
+import HeroSettingsEditor from './admin/HeroSettingsEditor';
+import ImagesManager from './admin/ImagesManager';
+import { useGetAllContent } from '../hooks/useQueries';
+
+type Section =
+  | 'overview'
+  | 'header'
+  | 'hero'
+  | 'about'
+  | 'services'
+  | 'clinics'
+  | 'social'
+  | 'footer'
+  | 'images';
 
 interface AdminDashboardProps {
   sessionToken: string;
   onLogout: () => void;
 }
 
-type Section =
-  | 'hero'
-  | 'images'
-  | 'header'
-  | 'about'
-  | 'clinics'
-  | 'services'
-  | 'social'
-  | 'footer';
-
-const navItems: { id: Section; label: string; icon: React.ReactNode; description: string }[] = [
-  { id: 'hero', label: 'Hero Settings', icon: <Settings className="w-4 h-4" />, description: 'Particle effects & background' },
-  { id: 'images', label: 'Images', icon: <Image className="w-4 h-4" />, description: 'Hero background image' },
-  { id: 'header', label: 'Header', icon: <Type className="w-4 h-4" />, description: 'Site title & header image' },
-  { id: 'about', label: 'About', icon: <User className="w-4 h-4" />, description: 'Bio text & profile photo' },
-  { id: 'clinics', label: 'Clinics', icon: <MapPin className="w-4 h-4" />, description: 'Manage clinic locations' },
-  { id: 'services', label: 'Services', icon: <Wrench className="w-4 h-4" />, description: 'Medical services offered' },
-  { id: 'social', label: 'Social Links', icon: <Share2 className="w-4 h-4" />, description: 'Social media profiles' },
-  { id: 'footer', label: 'Footer', icon: <FileText className="w-4 h-4" />, description: 'Footer content text' },
+const navItems: { id: Section; label: string; icon: React.ReactNode }[] = [
+  { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
+  { id: 'header', label: 'Site Title', icon: <FileText className="w-4 h-4" /> },
+  { id: 'hero', label: 'Hero Settings', icon: <Settings className="w-4 h-4" /> },
+  { id: 'about', label: 'About', icon: <FileText className="w-4 h-4" /> },
+  { id: 'services', label: 'Services', icon: <Stethoscope className="w-4 h-4" /> },
+  { id: 'clinics', label: 'Clinics', icon: <MapPin className="w-4 h-4" /> },
+  { id: 'social', label: 'Social Links', icon: <Share2 className="w-4 h-4" /> },
+  { id: 'footer', label: 'Footer', icon: <FileText className="w-4 h-4" /> },
+  { id: 'images', label: 'Images', icon: <Image className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboard({ sessionToken, onLogout }: AdminDashboardProps) {
-  const [activeSection, setActiveSection] = useState<Section>('hero');
-  const { data: content, isLoading } = useGetAllContent();
+  const [activeSection, setActiveSection] = useState<Section>('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: content } = useGetAllContent();
 
-  const renderEditor = () => {
-    // Sections that don't need content data
-    if (activeSection === 'hero') {
-      return <HeroSettingsEditor sessionToken={sessionToken} />;
-    }
-    if (activeSection === 'images') {
-      return <ImagesManager sessionToken={sessionToken} />;
-    }
-    if (activeSection === 'clinics') {
-      return <ClinicsManager sessionToken={sessionToken} />;
-    }
-    if (activeSection === 'services') {
-      return <ServicesManager sessionToken={sessionToken} />;
-    }
-    if (activeSection === 'social') {
-      return <SocialLinksManager sessionToken={sessionToken} />;
-    }
-
-    // Sections that need content data
-    if (isLoading || !content) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center gap-3 text-slate-400">
-            <div className="w-5 h-5 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-            <span className="font-body text-sm">Loading content...</span>
-          </div>
-        </div>
-      );
-    }
-
+  const renderContent = () => {
     switch (activeSection) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-1">Dashboard Overview</h2>
+              <p className="text-muted-foreground text-sm">Manage your medical profile content.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: 'Services', count: content?.services?.length ?? 0, color: 'bg-teal-50 text-teal-700 border-teal-200' },
+                { label: 'Clinics', count: content?.clinics?.length ?? 0, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                { label: 'Social Links', count: content?.socialLinks?.length ?? 0, color: 'bg-purple-50 text-purple-700 border-purple-200' },
+                { label: 'Sections', count: 5, color: 'bg-amber-50 text-amber-700 border-amber-200' },
+              ].map((item) => (
+                <div key={item.label} className={`rounded-xl border p-4 ${item.color}`}>
+                  <p className="text-2xl font-bold font-display">{item.count}</p>
+                  <p className="text-sm font-medium mt-1">{item.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-muted/50 rounded-xl border border-border p-6">
+              <h3 className="font-semibold text-foreground mb-3">Quick Actions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {navItems.slice(1).map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveSection(item.id)}
+                    className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border hover:border-primary hover:text-primary transition-colors text-sm font-medium text-foreground"
+                  >
+                    <span className="text-primary">{item.icon}</span>
+                    {item.label}
+                    <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
       case 'header':
-        return (
-          <HeaderEditor
-            sessionToken={sessionToken}
-            currentTitle={content.siteTitle}
-            currentHeaderImageBase64={content.headerImageBase64}
-            currentHeaderImageUrl={content.headerImageUrl}
-          />
-        );
+        return <HeaderEditor sessionToken={sessionToken} currentText={content?.siteTitle || ''} currentImageUrl={content?.headerImageUrl || ''} currentImageBase64={content?.headerImageBase64 || ''} />;
+      case 'hero':
+        return <HeroSettingsEditor sessionToken={sessionToken} />;
       case 'about':
-        return (
-          <AboutEditor
-            sessionToken={sessionToken}
-            currentText={content.aboutSection}
-            currentImageUrl={content.aboutImageUrl}
-            currentImageBase64={content.aboutImageBase64}
-          />
-        );
+        return <AboutEditor sessionToken={sessionToken} currentText={content?.aboutSection || ''} currentImageUrl={content?.aboutImageUrl || ''} currentImageBase64={content?.aboutImageBase64 || ''} />;
+      case 'services':
+        return <ServicesManager sessionToken={sessionToken} />;
+      case 'clinics':
+        return <ClinicsManager sessionToken={sessionToken} />;
+      case 'social':
+        return <SocialLinksManager sessionToken={sessionToken} />;
       case 'footer':
-        return (
-          <FooterEditor
-            sessionToken={sessionToken}
-            currentContent={content.footerContent}
-          />
-        );
+        return <FooterEditor sessionToken={sessionToken} currentContent={content?.footerContent || ''} />;
+      case 'images':
+        return <ImagesManager sessionToken={sessionToken} />;
       default:
         return null;
     }
   };
 
-  const activeItem = navItems.find((item) => item.id === activeSection);
-
   return (
-    <div className="min-h-screen bg-navy-800 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 bg-navy-900 border-r border-cyan-500/15 flex flex-col">
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-border flex flex-col transition-transform duration-300 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 lg:static lg:flex`}
+      >
         {/* Sidebar Header */}
-        <div className="p-5 border-b border-cyan-500/15">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-sharp bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div>
-              <p className="font-display font-bold text-white text-sm">Admin Panel</p>
-              <p className="text-slate-500 text-xs font-body">Content Management</p>
-            </div>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2 text-primary font-display font-semibold">
+            <Stethoscope className="w-5 h-5" />
+            <span>Admin Panel</span>
           </div>
+          <button
+            className="lg:hidden text-muted-foreground hover:text-foreground"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Nav Items */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={cn(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-sharp text-left transition-all duration-200 group',
+              onClick={() => { setActiveSection(item.id); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeSection === item.id
-                  ? 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-400'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
-              )}
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
             >
-              <span className={cn(
-                'shrink-0 transition-colors duration-200',
-                activeSection === item.id ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'
-              )}>
-                {item.icon}
-              </span>
-              <span className="font-body text-sm font-medium truncate">{item.label}</span>
-              {activeSection === item.id && (
-                <ChevronRight className="w-3 h-3 ml-auto text-cyan-400 shrink-0" />
-              )}
+              {item.icon}
+              {item.label}
             </button>
           ))}
         </nav>
 
         {/* Logout */}
-        <div className="p-3 border-t border-cyan-500/15">
+        <div className="px-3 py-4 border-t border-border">
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sharp text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
-            <span className="font-body text-sm font-medium">Logout</span>
+            <LogOut className="w-4 h-4" />
+            Logout
           </button>
         </div>
       </aside>
 
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <div className="h-14 border-b border-cyan-500/15 bg-navy-800/80 backdrop-blur-sm flex items-center px-6 gap-3">
-          <div className="flex items-center gap-2 text-slate-500 text-sm font-body">
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Dashboard</span>
-            <ChevronRight className="w-3 h-3" />
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="bg-white border-b border-border px-4 sm:px-6 py-4 flex items-center gap-4">
+          <button
+            className="lg:hidden text-muted-foreground hover:text-foreground"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="font-display font-semibold text-foreground">
+              {navItems.find((n) => n.id === activeSection)?.label || 'Dashboard'}
+            </h1>
           </div>
-          <span className="text-white text-sm font-body font-medium">{activeItem?.label}</span>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 pulse-dot" />
-            <span className="text-slate-500 text-xs font-body">Session active</span>
-          </div>
-        </div>
+        </header>
 
-        {/* Editor Area */}
-        <div className="flex-1 p-6 overflow-y-auto">
-          {/* Section Header */}
-          {activeItem && (
-            <div className="mb-6">
-              <h1 className="font-display font-bold text-2xl text-white">{activeItem.label}</h1>
-              <p className="text-slate-400 text-sm font-body mt-1">{activeItem.description}</p>
-            </div>
-          )}
-
-          {/* Editor Content */}
-          <div className="bg-navy-700 border border-cyan-500/15 rounded-card shadow-card-dark p-6">
-            {renderEditor()}
-          </div>
-        </div>
-      </main>
+        {/* Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,133 +1,198 @@
-import React from 'react';
-import { ChevronDown, Calendar, Info } from 'lucide-react';
-import ParticleCanvas from '../components/ParticleCanvas';
+import React, { useEffect, useRef, useState } from 'react';
 import { EditableField } from '../components/EditableField';
-import type { HeroSettings } from '../backend';
-import type { ParticleSettings } from '../components/ParticleCanvas';
+import ParticleCanvas, { ParticleSettings } from '../components/ParticleCanvas';
+import { useGetAllContent, useGetHeroSettings } from '../hooks/useQueries';
 
-interface HomeProps {
-  siteTitle?: string;
-  heroSettings?: HeroSettings;
-  heroBackgroundUrl?: string;
-  heroBackgroundBase64?: string;
-  onUpdateTitle?: (title: string) => void;
+interface Props {
+  onUpdateSiteTitle?: (title: string) => Promise<void>;
 }
 
-export default function Home({
-  siteTitle = 'Medical Excellence',
-  heroSettings,
-  heroBackgroundUrl,
-  heroBackgroundBase64,
-  onUpdateTitle,
-}: HomeProps) {
-  const heroImageSrc = heroBackgroundBase64
-    ? `data:image/jpeg;base64,${heroBackgroundBase64}`
-    : heroBackgroundUrl || '/assets/generated/hero-bg-hightech.dim_1920x1080.png';
+export default function Home({ onUpdateSiteTitle }: Props) {
+  const { data: content } = useGetAllContent();
+  const { data: heroSettings } = useGetHeroSettings();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
 
-  // Convert HeroSettings (bigint) to ParticleSettings (number)
-  const particleSettings: ParticleSettings = {
-    particleCount: heroSettings ? Number(heroSettings.particleCount) : 70,
-    particleSpeed: heroSettings?.particleSpeed ?? 1.5,
-    particleSize: heroSettings?.particleSize ?? 2.5,
-    particleColor: heroSettings?.particleColor ?? '#00d9ff',
-    showConnectionLines: heroSettings?.showConnectionLines ?? true,
-    mouseInteraction: heroSettings?.mouseInteraction ?? true,
-    backgroundEffect: (heroSettings?.backgroundEffect ?? 'gradient') as ParticleSettings['backgroundEffect'],
-    glassmorphismEnabled: heroSettings?.glassmorphismEnabled ?? false,
-    heroGradientStart: heroSettings?.heroGradientStart ?? '#0a0e27',
-    heroGradientEnd: heroSettings?.heroGradientEnd ?? '#0f1729',
-  };
+  const siteTitle = content?.siteTitle || 'Dr. Malay';
+  const tagline = 'Compassionate Care · Advanced Medicine · Trusted Expertise';
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Mouse parallax
+  useEffect(() => {
+    if (!heroSettings?.mouseParallaxEnabled) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const el = heroRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) / rect.width;
+      const dy = (e.clientY - cy) / rect.height;
+      setParallaxOffset({ x: dx * 20, y: dy * 20 });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [heroSettings?.mouseParallaxEnabled]);
+
+  // Background style
+  const bgStyle: React.CSSProperties = heroSettings
+    ? {
+        background: `linear-gradient(135deg, ${heroSettings.bgGradientStart} 0%, ${heroSettings.bgGradientEnd} 100%)`,
+      }
+    : {
+        background: 'linear-gradient(135deg, #0a0f1e 0%, #0d1f3c 100%)',
+      };
+
+  // Overlay style
+  const overlayStyle: React.CSSProperties = heroSettings
+    ? {
+        position: 'absolute',
+        inset: 0,
+        background: `rgba(0,0,0,${heroSettings.overlayOpacity * 0.4})`,
+        backdropFilter: heroSettings.backgroundBlur ? 'blur(1px)' : 'none',
+        zIndex: 2,
+        pointerEvents: 'none',
+      }
+    : {};
+
+  // Glass layer
+  const glassStyle: React.CSSProperties = heroSettings
+    ? {
+        position: 'absolute',
+        inset: 0,
+        background: `rgba(255,255,255,${heroSettings.glassmorphismIntensity * 0.03})`,
+        zIndex: 2,
+        pointerEvents: 'none',
+      }
+    : {};
+
+  // Text color
+  const textColor = heroSettings?.textColor || '#ffffff';
+
+  // Animation speed
+  const animSpeed = heroSettings?.animationSpeed ?? 1.0;
+
+  // Particle settings
+  const particleSettings: ParticleSettings | null = heroSettings
+    ? {
+        particlePreset: heroSettings.particlePreset,
+        particleCount: Number(heroSettings.particleCount),
+        particleMinSize: heroSettings.particleMinSize,
+        particleMaxSize: heroSettings.particleMaxSize,
+        particleSpeed: heroSettings.particleSpeed,
+        particleColor: heroSettings.particleColor,
+        particleOpacity: heroSettings.particleOpacity,
+      }
+    : null;
+
+  const parallaxStyle: React.CSSProperties = heroSettings?.mouseParallaxEnabled
+    ? {
+        transform: `translate(${parallaxOffset.x}px, ${parallaxOffset.y}px)`,
+        transition: 'transform 0.1s ease-out',
+      }
+    : {};
+
+  const accentColor = heroSettings?.particleColor || '#38F9D7';
 
   return (
     <section
-      id="hero"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-navy-800"
+      id="home"
+      ref={heroRef}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      style={bgStyle}
     >
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImageSrc})` }}
-      />
+      {/* Overlay */}
+      {heroSettings && <div style={overlayStyle} />}
+      {heroSettings && <div style={glassStyle} />}
 
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-navy-800/75" />
+      {/* Particle Canvas */}
+      {particleSettings && particleSettings.particlePreset !== 'None' && (
+        <ParticleCanvas settings={particleSettings} />
+      )}
 
-      {/* Animated grid overlay */}
+      {/* Grid overlay */}
       <div
-        className="absolute inset-0 opacity-30 pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'linear-gradient(oklch(0.75 0.18 200 / 0.06) 1px, transparent 1px), linear-gradient(90deg, oklch(0.75 0.18 200 / 0.06) 1px, transparent 1px)',
+          backgroundImage: `
+            linear-gradient(rgba(56,249,215,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(56,249,215,0.03) 1px, transparent 1px)
+          `,
           backgroundSize: '60px 60px',
+          zIndex: 3,
         }}
       />
 
-      {/* Particle Canvas */}
-      <div className="absolute inset-0">
-        <ParticleCanvas settings={particleSettings} />
-      </div>
-
-      {/* Glow orbs */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-cyan-500/8 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-cyan-500/5 blur-3xl pointer-events-none" />
-
       {/* Content */}
-      <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-pill border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-body font-medium mb-6 backdrop-blur-sm">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 pulse-dot" />
-          Advanced Medical Care
-        </div>
+      <div
+        className="relative z-10 text-center px-6 max-w-4xl mx-auto"
+        style={parallaxStyle}
+      >
+        {/* Accent line */}
+        <div
+          className="w-16 h-0.5 mx-auto mb-6 rounded-full"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
+            animationDuration: `${2 / animSpeed}s`,
+          }}
+        />
 
         {/* Title */}
-        <EditableField
-          value={siteTitle}
-          type="text"
-          label="Site Title"
-          onSave={onUpdateTitle || (() => {})}
+        <h1
+          className="text-5xl md:text-7xl font-bold font-heading mb-4 leading-tight"
+          style={{ color: textColor }}
         >
-          <h1 className="font-display font-bold text-5xl sm:text-6xl lg:text-7xl text-white mb-4 leading-tight tracking-tight">
-            <span className="gradient-text-cyan text-glow-cyan">{siteTitle}</span>
-          </h1>
-        </EditableField>
+          {onUpdateSiteTitle ? (
+            <EditableField
+              currentValue={siteTitle}
+              onSave={onUpdateSiteTitle}
+              className="inline"
+            />
+          ) : (
+            siteTitle
+          )}
+        </h1>
 
-        {/* Subtitle */}
-        <p className="text-slate-300 text-lg sm:text-xl font-body font-light max-w-2xl mx-auto mb-10 leading-relaxed">
-          Precision healthcare powered by cutting-edge technology and compassionate expertise.
+        {/* Tagline */}
+        <p
+          className="text-lg md:text-xl font-light tracking-wide mb-10 opacity-80"
+          style={{ color: textColor }}
+        >
+          {tagline}
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            onClick={() => scrollToSection('clinics')}
-            className="flex items-center gap-2 px-8 py-3.5 rounded-sharp bg-cyan-500 hover:bg-cyan-400 text-navy-800 font-display font-semibold text-sm transition-all duration-200 glow-cyan-sm hover:glow-cyan"
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="#clinics"
+            className="px-8 py-3 rounded-full font-semibold font-heading text-sm tracking-wide transition-all duration-200 hover:scale-105"
+            style={{
+              background: accentColor,
+              color: '#0a0f1e',
+            }}
           >
-            <Calendar className="w-4 h-4" />
             Book Appointment
-          </button>
-          <button
-            onClick={() => scrollToSection('about')}
-            className="flex items-center gap-2 px-8 py-3.5 rounded-sharp border border-cyan-500/50 hover:border-cyan-400 text-cyan-400 hover:text-cyan-300 font-display font-semibold text-sm transition-all duration-200 hover:bg-cyan-500/10 backdrop-blur-sm"
+          </a>
+          <a
+            href="#about"
+            className="px-8 py-3 rounded-full font-semibold font-heading text-sm tracking-wide border transition-all duration-200 hover:scale-105"
+            style={{
+              borderColor: accentColor,
+              color: accentColor,
+            }}
           >
-            <Info className="w-4 h-4" />
             Learn More
-          </button>
+          </a>
         </div>
       </div>
 
       {/* Scroll indicator */}
-      <button
-        onClick={() => scrollToSection('about')}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors duration-200 animate-float"
-        aria-label="Scroll down"
+      <div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 opacity-40"
+        style={{ color: textColor }}
       >
-        <span className="text-xs font-body uppercase tracking-widest">Scroll</span>
-        <ChevronDown className="w-4 h-4" />
-      </button>
+        <span className="text-xs tracking-widest uppercase">Scroll</span>
+        <div className="w-px h-8 bg-current animate-pulse" />
+      </div>
     </section>
   );
 }

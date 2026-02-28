@@ -1,249 +1,137 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Doctor-Oriented Professional UI with Glass Effects & Dynamic Section Visibility",
+  "title": "Advanced Footer, Roboto Headings, Hero Theme Settings & Particle Effects",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Implement dynamic section visibility logic that hides empty sections completely",
+      "summary": "Redesign Footer component with multi-column layout, social links, and visual consistency",
       "acceptanceCriteria": [
-        "About section is hidden when bio text is empty and no profile image is set.",
-        "Clinics section is hidden when the clinics list is empty.",
-        "Services section is hidden when the services list is empty.",
-        "Social Media section is hidden when the social links list is empty.",
-        "Each section renders normally as soon as at least one piece of content is present.",
-        "No empty state message, skeleton, or placeholder is shown to public visitors."
+        "Footer renders a multi-column layout (branding, navigation, contact, social)",
+        "Footer uses the same color palette, spacing, and border/shadow styles as the rest of the UI",
+        "A bottom bar with copyright text and a horizontal divider is present",
+        "Social media icons are displayed and link correctly",
+        "Footer is fully responsive (stacks columns on mobile)"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/MainPage.tsx",
+          "path": "frontend/src/components/Footer.tsx",
           "operation": "modify",
-          "description": "Add visibility logic to conditionally render About, Clinics, Services, and SocialMedia section components only when they contain content. Check aboutSection text and image URL for About, clinics array length for Clinics, services array length for Services, and socialLinks array length for SocialMedia. Omit the section component entirely from render when empty."
-        },
-        {
-          "path": "frontend/src/pages/About.tsx",
-          "operation": "modify",
-          "description": "Remove any empty-state placeholders or skeleton UI. Ensure the component renders its full content structure only when it has data to display."
-        },
-        {
-          "path": "frontend/src/pages/Clinics.tsx",
-          "operation": "modify",
-          "description": "Remove any empty-state placeholders or skeleton UI. Ensure the component renders its clinic grid only when the clinics array has at least one entry."
-        },
-        {
-          "path": "frontend/src/pages/Services.tsx",
-          "operation": "modify",
-          "description": "Remove any empty-state placeholders or skeleton UI. Ensure the component renders its service grid only when the services array has at least one entry."
-        },
-        {
-          "path": "frontend/src/pages/SocialMedia.tsx",
-          "operation": "modify",
-          "description": "Remove any empty-state placeholders or skeleton UI. Ensure the component renders its social link grid only when the socialLinks array has at least one entry."
+          "description": "Redesign Footer to include a multi-column layout with four distinct sections: branding/bio column (doctor name, short tagline), quick navigation links column (smooth-scroll links to Home, About, Services, Clinics, Social sections), contact/clinic info column (phone, email, address if applicable), and social media links column. Add a bottom bar below the columns with a horizontal divider and copyright text. Match the warm neutral tones (OKLCH colors from tailwind.config.js), teal accents, card-based aesthetic (border, shadow, rounded corners) used in Header and other section components. Ensure responsive design where columns stack vertically on mobile. Fetch content and social links from useGetAllContent hook and wire the admin-editable footer description into the branding column."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Apply professional doctor-oriented design system with medical-grade aesthetics",
+      "summary": "Import Roboto font and apply it to all headings across the application",
       "acceptanceCriteria": [
-        "Color palette reflects a medical/clinical aesthetic (no purely decorative neon overuse).",
-        "Typography hierarchy is clear with Space Grotesk headings and Inter body text.",
-        "All interactive elements have polished hover and focus states.",
-        "Layout feels structured, professional, and appropriate for a doctor's profile site.",
-        "The overall design communicates expertise and trust."
+        "Roboto font is loaded from Google Fonts",
+        "All h1–h6 elements and explicit heading/title classes use Roboto",
+        "Tailwind config reflects Roboto in the font family configuration",
+        "No heading in the app falls back to a non-Roboto font when Roboto is available"
       ],
       "file_operations": [
         {
-          "path": "frontend/tailwind.config.js",
+          "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Update the color palette to reflect a clean medical aesthetic with crisp white, deep charcoal, and trusted clinical accent colors (teal or soft emerald). Replace overly decorative neon tones with professional clinical tones. Ensure Space Grotesk is configured for headings and Inter for body text. Update hover and focus ring styles to be polished and refined."
+          "description": "Add a Google Fonts link tag in the <head> section to load the Roboto font family (multiple weights: 400, 500, 700). Place it alongside the existing Space Grotesk and Inter font imports."
         },
         {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Update CSS custom properties for light and dark themes to use the new medical-grade color palette. Define clinical accent tokens for borders, text highlights, and interactive states. Ensure all color variables align with the professional doctor-oriented aesthetic."
+          "description": "Import Roboto from Google Fonts using @import if not already imported via HTML, and define a global CSS rule targeting all heading elements (h1, h2, h3, h4, h5, h6) to set font-family: 'Roboto', sans-serif. Ensure this rule has sufficient specificity to override default Tailwind typography."
         },
         {
-          "path": "frontend/src/pages/Home.tsx",
+          "path": "frontend/tailwind.config.js",
           "operation": "modify",
-          "description": "Update the hero section styling to use the new medical-grade design system with refined typography (Space Grotesk for heading, Inter for subtext), clinical accent colors, and polished spacing. Ensure buttons and interactive elements have professional hover/focus states."
-        },
-        {
-          "path": "frontend/src/pages/About.tsx",
-          "operation": "modify",
-          "description": "Apply the updated typography hierarchy (Space Grotesk headings, Inter body), clinical color palette, and refined spacing. Ensure credential stat cards use professional styling appropriate for a medical profile."
-        },
-        {
-          "path": "frontend/src/pages/Clinics.tsx",
-          "operation": "modify",
-          "description": "Update clinic cards to use the professional medical design system with clinical accent colors cycling, refined typography, and polished hover states on interactive elements."
-        },
-        {
-          "path": "frontend/src/pages/Services.tsx",
-          "operation": "modify",
-          "description": "Apply the medical-grade design system to service cards with clinical accent colors, Space Grotesk for titles, Inter for descriptions, and polished hover/focus states."
-        },
-        {
-          "path": "frontend/src/pages/SocialMedia.tsx",
-          "operation": "modify",
-          "description": "Update social media cards to use the professional design system with clinical tones and refined typography, ensuring consistency with the overall medical aesthetic."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Apply the updated medical-grade design system to the footer with clinical accent colors, refined typography, and professional link hover states."
+          "description": "Update the theme.extend.fontFamily configuration to add a 'heading' or 'display' font stack with Roboto as the primary font. Reference this custom font family in components that render headings. Ensure the existing fontFamily.sans (Inter) and fontFamily.mono (Space Grotesk) remain unchanged, so body text continues to use Inter while headings use Roboto."
         },
         {
           "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Update header navigation styling to use the clinical color palette, Space Grotesk for navigation labels, and polished hover/active states appropriate for a medical professional's site."
+          "description": "Apply the Roboto heading font class (e.g., font-heading or explicit font-['Roboto']) to the site title text element in the header. Verify that the doctor name/site title displays in Roboto."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "Apply the Roboto heading font class to the hero section's main title (EditableField for siteTitle) and any other heading elements in the hero. Ensure the tagline or subtitle also uses Roboto if it is styled as a heading."
+        },
+        {
+          "path": "frontend/src/pages/About.tsx",
+          "operation": "modify",
+          "description": "Apply the Roboto heading font class to the 'About Me' section title and any credential card headings. Ensure all h2/h3 elements in the About page use Roboto."
+        },
+        {
+          "path": "frontend/src/pages/Services.tsx",
+          "operation": "modify",
+          "description": "Apply the Roboto heading font class to the 'What I Offer' section title and individual service card titles. Ensure all service headings render in Roboto."
+        },
+        {
+          "path": "frontend/src/pages/Clinics.tsx",
+          "operation": "modify",
+          "description": "Apply the Roboto heading font class to the 'Our Clinics' section title and individual clinic card headings. Ensure all clinic name headings use Roboto."
+        },
+        {
+          "path": "frontend/src/pages/SocialMedia.tsx",
+          "operation": "modify",
+          "description": "Apply the Roboto heading font class to the 'Follow & Connect' section title. Ensure the social media section heading uses Roboto."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Apply the Roboto heading font class to the footer's branding/bio column heading (doctor name or site title) and any column subheadings. Ensure footer headings use Roboto for visual consistency."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Apply consistent glassmorphism effects across all cards, modals, navigation, and panels",
+      "summary": "Expand HeroSettingsEditor with comprehensive theme controls and live preview",
       "acceptanceCriteria": [
-        "GlassCard component is updated to use backdrop-blur and semi-transparent background.",
-        "Admin sidebar and panel surfaces use consistent glass styling.",
-        "Navigation header uses a frosted glass effect.",
-        "All glass surfaces maintain readable text contrast.",
-        "Glass effects are applied consistently — no mix of opaque and glass cards within the same section."
+        "HeroSettingsEditor displays all new controls: gradient pickers, overlay opacity, text color, blur toggle, glassmorphism slider, height selector, animation speed, mouse parallax toggle",
+        "A live preview thumbnail reflects the current settings combination",
+        "All settings are persisted to the backend and reloaded on page load",
+        "The Hero section on the public page correctly applies all saved theme settings",
+        "Controls are grouped logically with clear labels and sections"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/GlassCard.tsx",
-          "operation": "modify",
-          "description": "Update GlassCard to use glassmorphism styling with backdrop-blur-md or backdrop-blur-lg, semi-transparent background (bg-opacity-10 to bg-opacity-20), subtle light border, and soft inner glow. Ensure text contrast remains readable on all backgrounds. Replace the current gradient background with the glass effect while maintaining the accent color border and optional hover lift."
-        },
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Apply a frosted glass effect to the header with backdrop-blur, semi-transparent background, and subtle border. Ensure navigation text contrast is maintained for readability in both light and dark contexts."
-        },
-        {
-          "path": "frontend/src/components/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Update the admin sidebar to use consistent glassmorphism styling with backdrop-blur, semi-transparent background, and subtle borders. Apply glass effects to the main content area panels as well. Ensure all text remains readable on glass surfaces."
-        },
-        {
-          "path": "frontend/src/components/admin/AboutEditor.tsx",
-          "operation": "modify",
-          "description": "Wrap editor content in glass-styled panels using backdrop-blur and semi-transparent backgrounds. Ensure input fields and text maintain readable contrast on glass surfaces."
-        },
-        {
-          "path": "frontend/src/components/admin/ClinicsManager.tsx",
-          "operation": "modify",
-          "description": "Apply glassmorphism to clinic editor cards and forms using backdrop-blur and semi-transparent backgrounds. Ensure all form elements are readable."
-        },
-        {
-          "path": "frontend/src/components/admin/ServicesManager.tsx",
-          "operation": "modify",
-          "description": "Apply glassmorphism to service editor cards and forms using backdrop-blur and semi-transparent backgrounds. Ensure icon preview and text fields maintain readability."
-        },
-        {
-          "path": "frontend/src/components/admin/SocialLinksManager.tsx",
-          "operation": "modify",
-          "description": "Apply glassmorphism to social link editor cards using backdrop-blur and semi-transparent backgrounds. Ensure platform icons and text are readable."
-        },
-        {
-          "path": "frontend/src/components/admin/HeaderEditor.tsx",
-          "operation": "modify",
-          "description": "Apply glassmorphism to the header editor panel using backdrop-blur and semi-transparent background."
-        },
-        {
-          "path": "frontend/src/components/admin/FooterEditor.tsx",
-          "operation": "modify",
-          "description": "Apply glassmorphism to the footer editor panel using backdrop-blur and semi-transparent background."
-        },
-        {
           "path": "frontend/src/components/admin/HeroSettingsEditor.tsx",
           "operation": "modify",
-          "description": "Apply glassmorphism to the hero settings editor panel using backdrop-blur and semi-transparent background. Ensure color picker and range inputs are readable."
+          "description": "Expand the HeroSettingsEditor component to include new UI controls: two color pickers for bgGradientStart and bgGradientEnd, a slider for overlayOpacity (0–100%), a color picker for textColor, a toggle for backgroundBlur, a slider for glassmorphismIntensity (0–100%), a dropdown/select for heroHeight (options: 'compact', 'normal', 'full-screen'), a slider for animationSpeed (0–10), and a toggle for mouseParallaxEnabled. Organize these controls into logical sections (Background, Overlay, Text, Effects, Interactions). Add a live preview thumbnail area that renders a miniature version of the hero section reflecting the current settings (use a scaled-down div with inline styles mirroring the gradient, overlay, blur, etc.). Ensure all fields are bound to the IdleHeroSettings type from the backend interface. Use the useUpdateHeroSettings mutation to persist changes. Fetch current settings on mount using useGetHeroSettings and populate the form fields. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/admin/ImagesManager.tsx",
+          "path": "frontend/src/pages/Home.tsx",
           "operation": "modify",
-          "description": "Apply glassmorphism to the images manager panel using backdrop-blur and semi-transparent background. Ensure image previews and upload controls are clear."
-        },
-        {
-          "path": "frontend/src/components/ClinicCard.tsx",
-          "operation": "modify",
-          "description": "Ensure ClinicCard uses the updated GlassCard component with glassmorphism effects. Verify that all clinic details remain readable on the glass surface."
-        },
-        {
-          "path": "frontend/src/pages/About.tsx",
-          "operation": "modify",
-          "description": "Ensure stat cards or any card-based elements use the updated GlassCard with glassmorphism. Verify text readability."
-        },
-        {
-          "path": "frontend/src/pages/Services.tsx",
-          "operation": "modify",
-          "description": "Ensure service cards use the updated GlassCard with glassmorphism. Verify icon visibility and text readability on glass surfaces."
-        },
-        {
-          "path": "frontend/src/pages/SocialMedia.tsx",
-          "operation": "modify",
-          "description": "Ensure social media link cards use the updated GlassCard with glassmorphism. Verify icon visibility and text readability."
+          "description": "Update the Home/Hero page component to read and apply all hero theme settings from the backend: apply bgGradientStart and bgGradientEnd as a CSS linear-gradient background, apply overlayOpacity as an overlay layer opacity, apply textColor to the title and tagline text, conditionally apply a backdrop-blur class if backgroundBlur is true, apply glassmorphismIntensity as a translucent overlay with varying opacity, apply heroHeight to set the hero section height (e.g., min-h-[50vh] for compact, min-h-screen for full-screen), apply animationSpeed to control CSS animation duration, and conditionally apply mouse parallax effect if mouseParallaxEnabled is true (use mouse move event listeners to adjust background position or element transforms). Fetch hero settings using useGetHeroSettings and apply styles dynamically via inline styles or Tailwind classes. Ensure the hero section updates when settings are saved in the admin panel (use React Query cache invalidation)."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Redesign AdminDashboard into a powerful, smart admin interface with grouped navigation, status indicators, and professional CMS-style controls",
+      "summary": "Implement advanced particle effect selection system with presets and fine-tuning controls",
       "acceptanceCriteria": [
-        "Admin sidebar has grouped navigation items with icons for each section.",
-        "Active section is clearly highlighted in the sidebar.",
-        "Each editor section shows a status badge indicating whether the section is empty or has content.",
-        "Editors use glass card containers with clear section titles and action buttons.",
-        "Save/cancel actions have clear visual states (loading, success, error).",
-        "The admin interface feels like a professional medical practice management tool."
+        "Admin particle settings panel shows a grid of at least 10 named presets with animated preview thumbnails",
+        "Selected preset name is saved to hero settings in the backend",
+        "Fine-tuning controls (count, size, speed, color, opacity) are present and functional",
+        "ParticleCanvas component renders the selected particle preset with fine-tuned parameters on the Hero section",
+        "Changing preset in admin updates the live hero section after save",
+        "'None' preset disables all particles cleanly"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Restructure the sidebar navigation with grouped sections and icons for each navigation item (Hero, Images, Header, About, Clinics, Services, Social, Footer). Highlight the active section with a clear visual indicator (accent border, background, or glow). Add section health status badges next to each nav item showing whether the section is empty or has content (use data from getAllContent query). Apply glassmorphism to the sidebar as per REQ-3. Ensure the content area uses glass card containers for each editor."
-        },
-        {
-          "path": "frontend/src/components/admin/AboutEditor.tsx",
-          "operation": "modify",
-          "description": "Add a section status indicator showing whether the About section is empty or has content. Wrap the editor in a glass card container with a clear section title. Ensure save/cancel buttons have loading, success, and error visual states using appropriate UI feedback (spinners, checkmarks, error messages)."
-        },
-        {
-          "path": "frontend/src/components/admin/ClinicsManager.tsx",
-          "operation": "modify",
-          "description": "Add a section status indicator showing the number of clinics or empty state. Wrap the manager in a glass card container with a clear section title. Ensure add/edit/delete actions have clear visual states (loading, success, error) with appropriate feedback."
-        },
-        {
-          "path": "frontend/src/components/admin/ServicesManager.tsx",
-          "operation": "modify",
-          "description": "Add a section status indicator showing the number of services or empty state. Wrap the manager in a glass card container with a clear section title. Ensure add/edit/delete actions have clear visual states (loading, success, error) with appropriate feedback."
-        },
-        {
-          "path": "frontend/src/components/admin/SocialLinksManager.tsx",
-          "operation": "modify",
-          "description": "Add a section status indicator showing the number of social links or empty state. Wrap the manager in a glass card container with a clear section title. Ensure add/edit/delete actions have clear visual states (loading, success, error) with appropriate feedback."
-        },
-        {
-          "path": "frontend/src/components/admin/HeaderEditor.tsx",
-          "operation": "modify",
-          "description": "Add a section status indicator showing whether the header has content. Wrap the editor in a glass card container with a clear section title. Ensure save actions have clear visual states (loading, success, error)."
-        },
-        {
-          "path": "frontend/src/components/admin/FooterEditor.tsx",
-          "operation": "modify",
-          "description": "Add a section status indicator showing whether the footer has content. Wrap the editor in a glass card container with a clear section title. Ensure save actions have clear visual states (loading, success, error)."
-        },
-        {
           "path": "frontend/src/components/admin/HeroSettingsEditor.tsx",
           "operation": "modify",
-          "description": "Wrap the editor in a glass card container with a clear section title. Ensure save/reset actions have clear visual states (loading, success, error) with appropriate feedback."
+          "description": "Add a particle effect selection section to the HeroSettingsEditor. Display a grid of at least 10 named particle presets: 'None', 'Floating Dots', 'Stars', 'Snow', 'Bubbles', 'Geometric Shapes', 'DNA Helix', 'Medical Pulse', 'Confetti', 'Fireflies'. For each preset, render a small card with a label and an animated preview thumbnail (use a mini canvas or CSS animation to show a representative particle animation). Allow the admin to select a preset by clicking on it, updating the particlePreset field in the hero settings. Below the preset grid, add fine-tuning controls: a slider for particleCount (10–500), a min/max range slider for particleMinSize and particleMaxSize (1–50px), a slider for particleSpeed (0.1–10), a color picker for particleColor, and a slider for particleOpacity (0–100%). Ensure all fields are bound to the IdleHeroSettings type. Use the useUpdateHeroSettings mutation to persist the selected preset and fine-tuning parameters. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/admin/ImagesManager.tsx",
+          "path": "frontend/src/components/ParticleCanvas.tsx",
           "operation": "modify",
-          "description": "Add a section status indicator showing whether the hero background image is set. Wrap the manager in a glass card container with a clear section title. Ensure upload/delete actions have clear visual states (loading, success, error)."
+          "description": "Implement the ParticleCanvas component to render client-side particle animations on a canvas element overlaying the hero section. Accept props for the selected particle preset name, particle count, particle size range (min/max), particle speed, particle color, and particle opacity. Use the canvas 2D rendering context or CSS animations to draw particles based on the preset. Implement at least 10 presets: 'None' (render nothing), 'Floating Dots' (circular particles drifting slowly), 'Stars' (twinkling star shapes), 'Snow' (falling snowflakes), 'Bubbles' (rising circular bubbles), 'Geometric Shapes' (rotating triangles/squares), 'DNA Helix' (double-helix spiral pattern), 'Medical Pulse' (pulsing cross/plus symbols), 'Confetti' (falling colorful squares), 'Fireflies' (glowing dots with opacity fade). Use requestAnimationFrame for smooth animation. Apply fine-tuned parameters (count, size, speed, color, opacity) to each particle. Ensure the canvas is positioned absolutely over the hero background and does not block user interaction with the hero content (use pointer-events: none). Fetch particle settings from the hero settings and re-render when settings change. Optimize performance to avoid frame drops with high particle counts."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "Wire the ParticleCanvas component into the Home/Hero section. Fetch hero settings using useGetHeroSettings and pass the particle-related fields (particlePreset, particleCount, particleMinSize, particleMaxSize, particleSpeed, particleColor, particleOpacity) as props to ParticleCanvas. Render ParticleCanvas as an overlay layer on top of the hero background but below the hero text content. Ensure the particle canvas spans the full hero section dimensions. If particlePreset is 'None', do not render ParticleCanvas or render it with no particles to avoid unnecessary computation. Ensure the particle effect updates when the admin saves new particle settings (React Query cache invalidation will trigger a re-fetch and re-render)."
         }
       ]
     }

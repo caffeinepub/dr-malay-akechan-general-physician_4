@@ -1,160 +1,182 @@
 import React from 'react';
-import { MapPin, Phone, Mail, Heart, ExternalLink } from 'lucide-react';
-import { SiFacebook, SiInstagram, SiX, SiLinkedin, SiYoutube } from 'react-icons/si';
-import { EditableField } from './EditableField';
+import { useGetAllContent } from '../hooks/useQueries';
+import {
+  Mail, Phone, MapPin, Heart, ExternalLink,
+  Facebook, Twitter, Instagram, Linkedin, Youtube, Globe
+} from 'lucide-react';
+import { SiFacebook, SiX, SiInstagram, SiLinkedin, SiYoutube } from 'react-icons/si';
 
-interface FooterProps {
-  siteTitle?: string;
-  footerContent?: string;
-  socialLinks?: Array<[bigint, { platform: string; url: string }]>;
-  onUpdateFooter?: (text: string) => void;
-}
-
-const platformIcons: Record<string, React.ReactNode> = {
-  facebook: <SiFacebook className="w-4 h-4" />,
-  instagram: <SiInstagram className="w-4 h-4" />,
-  twitter: <SiX className="w-4 h-4" />,
-  x: <SiX className="w-4 h-4" />,
-  linkedin: <SiLinkedin className="w-4 h-4" />,
-  youtube: <SiYoutube className="w-4 h-4" />,
-};
-
-const navLinks = [
-  { label: 'Home', href: '#hero' },
+const NAV_LINKS = [
+  { label: 'Home', href: '#home' },
   { label: 'About', href: '#about' },
   { label: 'Services', href: '#services' },
   { label: 'Clinics', href: '#clinics' },
   { label: 'Connect', href: '#social' },
 ];
 
-export default function Footer({
-  siteTitle = 'MedClinic',
-  footerContent = '',
-  socialLinks = [],
-  onUpdateFooter,
-}: FooterProps) {
-  const handleNavClick = (href: string) => {
-    const id = href.replace('#', '');
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
+const PLATFORM_ICONS: Record<string, React.ReactNode> = {
+  facebook: <SiFacebook className="w-4 h-4" />,
+  twitter: <SiX className="w-4 h-4" />,
+  x: <SiX className="w-4 h-4" />,
+  instagram: <SiInstagram className="w-4 h-4" />,
+  linkedin: <SiLinkedin className="w-4 h-4" />,
+  youtube: <SiYoutube className="w-4 h-4" />,
+};
 
-  const appId = encodeURIComponent(typeof window !== 'undefined' ? window.location.hostname : 'medical-clinic');
+function getPlatformIcon(platform: string) {
+  const key = platform.toLowerCase();
+  return PLATFORM_ICONS[key] || <Globe className="w-4 h-4" />;
+}
+
+export default function Footer() {
+  const { data: content } = useGetAllContent();
+
+  const siteTitle = content?.siteTitle || 'Dr. Malay';
+  const footerContent = content?.footerContent || 'Dedicated to providing exceptional medical care with compassion and expertise.';
+  const socialLinks = content?.socialLinks || [];
+  const clinics = content?.clinics || [];
+  const primaryClinic = clinics[0]?.[1];
+
+  const appId = encodeURIComponent(
+    typeof window !== 'undefined' ? window.location.hostname : 'unknown-app'
+  );
 
   return (
-    <footer className="bg-navy-800 border-t border-cyan-500/15 relative overflow-hidden">
-      {/* Grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-30 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(oklch(0.75 0.18 200 / 0.04) 1px, transparent 1px), linear-gradient(90deg, oklch(0.75 0.18 200 / 0.04) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
+    <footer className="bg-footer-bg border-t border-footer-border">
+      {/* Top gradient accent line */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-accent to-transparent opacity-60" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {/* Brand Column */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-sharp bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center">
-                <span className="text-cyan-400 font-display font-bold text-sm">M</span>
+      <div className="max-w-7xl mx-auto px-6 pt-16 pb-10">
+        {/* Main columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+
+          {/* Column 1 — Brand */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent-secondary flex items-center justify-center text-white font-bold text-sm font-heading">
+                {siteTitle.charAt(0)}
               </div>
-              <span className="font-display font-bold text-xl text-white">{siteTitle}</span>
+              <h3 className="text-lg font-bold font-heading text-footer-heading tracking-wide">
+                {siteTitle}
+              </h3>
             </div>
-            <div className="text-slate-400 text-sm font-body leading-relaxed">
-              {footerContent ? (
-                <EditableField
-                  value={footerContent}
-                  type="textarea"
-                  label="Footer Content"
-                  onSave={onUpdateFooter || (() => {})}
-                >
-                  <span>{footerContent}</span>
-                </EditableField>
-              ) : (
-                <span className="text-slate-500 italic">Professional medical care you can trust.</span>
-              )}
-            </div>
-
-            {/* Social Links */}
+            <p className="text-sm text-footer-muted leading-relaxed mb-5">
+              {footerContent}
+            </p>
+            {/* Social icons */}
             {socialLinks.length > 0 && (
-              <div className="flex items-center gap-2 pt-2">
-                {socialLinks.map(([id, link]) => {
-                  const platformKey = link.platform.toLowerCase();
-                  const icon = platformIcons[platformKey];
-                  return (
-                    <a
-                      key={id.toString()}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-sharp border border-slate-600 hover:border-cyan-500/60 bg-navy-700 hover:bg-cyan-500/10 flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-all duration-200"
-                      aria-label={link.platform}
-                    >
-                      {icon || <ExternalLink className="w-3 h-3" />}
-                    </a>
-                  );
-                })}
+              <div className="flex flex-wrap gap-2">
+                {socialLinks.map(([id, link]) => (
+                  <a
+                    key={id.toString()}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.platform}
+                    className="w-8 h-8 rounded-lg bg-footer-icon-bg border border-footer-border flex items-center justify-center text-footer-muted hover:text-accent hover:border-accent hover:bg-footer-icon-hover transition-all duration-200"
+                  >
+                    {getPlatformIcon(link.platform)}
+                  </a>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h4 className="font-display font-semibold text-white text-sm uppercase tracking-widest">
+          {/* Column 2 — Quick Navigation */}
+          <div>
+            <h4 className="text-xs font-semibold font-heading uppercase tracking-widest text-accent mb-5">
               Navigation
             </h4>
-            <nav className="flex flex-col gap-2">
-              {navLinks.map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => handleNavClick(link.href)}
-                  className="text-left text-sm text-slate-400 hover:text-cyan-400 font-body transition-colors duration-200 flex items-center gap-2 group w-fit"
-                >
-                  <span className="w-1 h-1 rounded-full bg-cyan-500/40 group-hover:bg-cyan-400 transition-colors duration-200" />
-                  {link.label}
-                </button>
+            <ul className="space-y-2.5">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-footer-muted hover:text-footer-heading transition-colors duration-150 flex items-center gap-1.5 group"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {link.label}
+                  </a>
+                </li>
               ))}
-            </nav>
+            </ul>
           </div>
 
-          {/* Contact / Info */}
-          <div className="space-y-4">
-            <h4 className="font-display font-semibold text-white text-sm uppercase tracking-widest">
+          {/* Column 3 — Contact / Clinic */}
+          <div>
+            <h4 className="text-xs font-semibold font-heading uppercase tracking-widest text-accent mb-5">
               Contact
             </h4>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 text-sm text-slate-400">
-                <MapPin className="w-4 h-4 text-cyan-500/60 mt-0.5 shrink-0" />
-                <span className="font-body">Visit one of our clinic locations</span>
-              </div>
-              <div className="flex items-start gap-3 text-sm text-slate-400">
-                <Phone className="w-4 h-4 text-cyan-500/60 mt-0.5 shrink-0" />
-                <span className="font-body">Contact us via clinic phone</span>
-              </div>
-              <div className="flex items-start gap-3 text-sm text-slate-400">
-                <Mail className="w-4 h-4 text-cyan-500/60 mt-0.5 shrink-0" />
-                <span className="font-body">Reach out through social media</span>
-              </div>
-            </div>
+            <ul className="space-y-3">
+              {primaryClinic?.phone && (
+                <li className="flex items-start gap-2.5 text-sm text-footer-muted">
+                  <Phone className="w-4 h-4 mt-0.5 text-accent shrink-0" />
+                  <span>{primaryClinic.phone}</span>
+                </li>
+              )}
+              {primaryClinic?.address && (
+                <li className="flex items-start gap-2.5 text-sm text-footer-muted">
+                  <MapPin className="w-4 h-4 mt-0.5 text-accent shrink-0" />
+                  <span>{primaryClinic.address}</span>
+                </li>
+              )}
+              {!primaryClinic && (
+                <li className="text-sm text-footer-muted italic">
+                  Contact details coming soon.
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Column 4 — Clinics */}
+          <div>
+            <h4 className="text-xs font-semibold font-heading uppercase tracking-widest text-accent mb-5">
+              Our Clinics
+            </h4>
+            {clinics.length > 0 ? (
+              <ul className="space-y-3">
+                {clinics.slice(0, 4).map(([id, clinic]) => (
+                  <li key={id.toString()}>
+                    <p className="text-sm font-medium text-footer-heading">{clinic.name}</p>
+                    {clinic.address && (
+                      <p className="text-xs text-footer-muted mt-0.5">{clinic.address}</p>
+                    )}
+                    {clinic.bookingUrl && (
+                      <a
+                        href={clinic.bookingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-1"
+                      >
+                        Book Appointment <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-footer-muted italic">Clinic info coming soon.</p>
+            )}
           </div>
         </div>
 
-        {/* Bottom Strip */}
-        <div className="mt-10 pt-6 border-t border-slate-700/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-slate-500 text-xs font-body">
-            © {new Date().getFullYear()} {siteTitle}. All rights reserved.
+        {/* Divider */}
+        <div className="border-t border-footer-border mb-6" />
+
+        {/* Bottom bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-footer-muted">
+          <p>
+            &copy; {new Date().getFullYear()} {siteTitle}. All rights reserved.
           </p>
-          <p className="text-slate-500 text-xs font-body flex items-center gap-1">
+          <p className="flex items-center gap-1">
             Built with{' '}
-            <Heart className="w-3 h-3 text-cyan-500 fill-cyan-500 mx-0.5" />{' '}
+            <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />{' '}
             using{' '}
             <a
               href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-cyan-400 hover:text-cyan-300 transition-colors ml-0.5"
+              className="text-accent hover:underline font-medium"
             >
               caffeine.ai
             </a>

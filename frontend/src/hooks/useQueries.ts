@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { HeroSettings, Images } from '../backend';
+import type { IdleHeroSettings, Images } from '../backend';
 
 // ── Queries ──────────────────────────────────────────────────────────────────
 
@@ -212,7 +212,7 @@ export function useUpdateHeroSettings() {
       settings,
       sessionToken,
     }: {
-      settings: HeroSettings;
+      settings: IdleHeroSettings;
       sessionToken: string;
     }) => {
       if (!actor) throw new Error('Actor not available');

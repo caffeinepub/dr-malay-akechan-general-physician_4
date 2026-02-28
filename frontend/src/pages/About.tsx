@@ -1,101 +1,87 @@
 import React from 'react';
-import { User, Award, Clock } from 'lucide-react';
 import { EditableField } from '../components/EditableField';
+import { useGetAllContent } from '../hooks/useQueries';
+import { Award, BookOpen, Stethoscope, GraduationCap } from 'lucide-react';
 
-interface AboutProps {
-  aboutSection?: string;
-  aboutImageUrl?: string;
-  aboutImageBase64?: string;
-  onUpdateAbout?: (text: string) => void;
+interface Props {
+  onUpdateAbout?: (text: string, imageUrl: string) => Promise<void>;
 }
 
-export default function About({
-  aboutSection = '',
-  aboutImageUrl = '',
-  aboutImageBase64 = '',
-  onUpdateAbout,
-}: AboutProps) {
-  const imageSrc = aboutImageBase64
+const CREDENTIALS = [
+  { icon: <GraduationCap className="w-5 h-5" />, label: 'Education', value: 'MBBS, MD — Top Medical University' },
+  { icon: <Award className="w-5 h-5" />, label: 'Experience', value: '15+ Years Clinical Practice' },
+  { icon: <Stethoscope className="w-5 h-5" />, label: 'Specialty', value: 'Internal Medicine & Cardiology' },
+  { icon: <BookOpen className="w-5 h-5" />, label: 'Research', value: '30+ Published Papers' },
+];
+
+export default function About({ onUpdateAbout }: Props) {
+  const { data: content } = useGetAllContent();
+
+  const aboutText = content?.aboutSection || 'Dedicated physician with over 15 years of experience providing compassionate, evidence-based care to patients across all walks of life.';
+  const aboutImageUrl = content?.aboutImageUrl || '';
+  const aboutImageBase64 = content?.aboutImageBase64 || '';
+
+  const displayImage = aboutImageBase64
     ? `data:image/jpeg;base64,${aboutImageBase64}`
     : aboutImageUrl || null;
 
-  if (!aboutSection && !imageSrc) return null;
-
   return (
-    <section id="about" className="py-24 bg-navy-800 relative overflow-hidden">
-      {/* Subtle grid */}
-      <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(oklch(0.75 0.18 200 / 0.04) 1px, transparent 1px), linear-gradient(90deg, oklch(0.75 0.18 200 / 0.04) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Label */}
-        <div className="flex items-center gap-3 mb-12">
-          <div className="w-8 h-px bg-cyan-500/60" />
-          <span className="text-cyan-400 text-xs font-body font-medium uppercase tracking-widest">About</span>
-          <div className="flex-1 h-px bg-slate-700/50" />
+    <section id="about" className="py-24 bg-background">
+      <div className="max-w-6xl mx-auto px-6">
+        {/* Section header */}
+        <div className="text-center mb-16">
+          <p className="text-xs font-semibold font-heading uppercase tracking-widest text-primary mb-2">About</p>
+          <h2 className="text-4xl md:text-5xl font-bold font-heading text-foreground">
+            About Me
+          </h2>
+          <div className="w-16 h-0.5 mx-auto mt-4 bg-gradient-to-r from-transparent via-primary to-transparent" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Image Column */}
-          {imageSrc && (
-            <div className="relative">
-              <div className="relative rounded-card overflow-hidden border border-cyan-500/30 glow-cyan-sm">
-                <img
-                  src={imageSrc}
-                  alt="Doctor profile"
-                  className="w-full h-80 lg:h-96 object-cover"
-                />
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-navy-800/60 to-transparent" />
-              </div>
-              {/* Decorative corner accents */}
-              <div className="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 border-cyan-500/60" />
-              <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-cyan-500/60" />
+          {/* Image */}
+          <div className="relative flex justify-center lg:justify-end">
+            <div className="relative rounded-2xl overflow-hidden w-64 h-80 sm:w-80 sm:h-96 shadow-2xl border border-border">
+              {displayImage ? (
+                <img src={displayImage} alt="Doctor" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                  <GraduationCap className="w-20 h-20 text-primary/30" />
+                </div>
+              )}
             </div>
-          )}
+            {/* Accent decoration */}
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl bg-primary/10 border border-primary/20 -z-10" />
+            <div className="absolute -top-4 -left-4 w-16 h-16 rounded-xl bg-primary/5 border border-primary/10 -z-10" />
+          </div>
 
-          {/* Text Column */}
-          <div className={`space-y-6 ${!imageSrc ? 'lg:col-span-2 max-w-3xl' : ''}`}>
-            <h2 className="font-display font-bold text-4xl text-white leading-tight">
-              Meet Your <span className="gradient-text-cyan">Doctor</span>
-            </h2>
-
-            {/* Accent bar + bio */}
-            <div className="flex gap-4">
-              <div className="w-0.5 bg-gradient-to-b from-cyan-500 to-cyan-500/10 rounded-full shrink-0" />
-              <div className="flex-1">
+          {/* Content */}
+          <div>
+            <div className="w-1 h-16 bg-gradient-to-b from-primary to-transparent rounded-full mb-6" />
+            <div className="text-foreground/80 leading-relaxed text-base mb-8">
+              {onUpdateAbout ? (
                 <EditableField
-                  value={aboutSection}
-                  type="textarea"
-                  label="About Section"
-                  onSave={onUpdateAbout || (() => {})}
-                >
-                  <p className="text-slate-300 font-body leading-relaxed text-base whitespace-pre-wrap">
-                    {aboutSection}
-                  </p>
-                </EditableField>
-              </div>
+                  currentValue={aboutText}
+                  onSave={(text) => onUpdateAbout(text, aboutImageUrl)}
+                  placeholder="Write your bio here..."
+                  multiline
+                />
+              ) : (
+                <p>{aboutText}</p>
+              )}
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-4 pt-4">
-              {[
-                { icon: <Award className="w-4 h-4" />, label: 'Certified', value: 'Expert' },
-                { icon: <Clock className="w-4 h-4" />, label: 'Experience', value: 'Years' },
-                { icon: <User className="w-4 h-4" />, label: 'Patients', value: 'Served' },
-              ].map((stat, i) => (
+            {/* Credentials */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {CREDENTIALS.map((cred) => (
                 <div
-                  key={i}
-                  className="bg-navy-700 border border-slate-700/50 rounded-sharp p-3 text-center"
+                  key={cred.label}
+                  className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/40 transition-colors"
                 >
-                  <div className="flex justify-center text-cyan-400 mb-1">{stat.icon}</div>
-                  <div className="text-white font-display font-semibold text-sm">{stat.value}</div>
-                  <div className="text-slate-500 text-xs font-body">{stat.label}</div>
+                  <div className="text-primary mt-0.5 shrink-0">{cred.icon}</div>
+                  <div>
+                    <p className="text-xs font-semibold font-heading uppercase tracking-wider text-muted-foreground">{cred.label}</p>
+                    <p className="text-sm text-foreground mt-0.5">{cred.value}</p>
+                  </div>
                 </div>
               ))}
             </div>

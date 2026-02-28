@@ -1,211 +1,203 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Save, X, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useGetAllContent, useAddClinic, useUpdateClinic, useDeleteClinic } from '../../hooks/useQueries';
-import type { Clinic } from '../../backend';
+import React, { useState } from 'react';
+import { Plus, Pencil, Trash2, Loader2, X, Check } from 'lucide-react';
+import {
+  useGetAllContent,
+  useAddClinic,
+  useUpdateClinic,
+  useDeleteClinic,
+} from '../../hooks/useQueries';
 
 interface ClinicsManagerProps {
   sessionToken: string;
 }
 
-const emptyForm = {
-  name: '',
-  address: '',
-  phone: '',
-  description: '',
-  mapUrl: '',
-  bookingUrl: '',
-};
+interface ClinicForm {
+  name: string;
+  description: string;
+  address: string;
+  phone: string;
+  mapUrl: string;
+  bookingUrl: string;
+}
+
+const emptyForm: ClinicForm = { name: '', description: '', address: '', phone: '', mapUrl: '', bookingUrl: '' };
 
 export default function ClinicsManager({ sessionToken }: ClinicsManagerProps) {
-  const { data: content } = useGetAllContent();
-  const clinics = content?.clinics || [];
-
+  const { data: content, isLoading } = useGetAllContent();
   const addClinic = useAddClinic();
   const updateClinic = useUpdateClinic();
   const deleteClinic = useDeleteClinic();
 
-  const [showForm, setShowForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<bigint | null>(null);
-  const [form, setForm] = useState(emptyForm);
-  const [formError, setFormError] = useState('');
+  const [form, setForm] = useState<ClinicForm>(emptyForm);
+  const [editForm, setEditForm] = useState<ClinicForm>(emptyForm);
 
-  const handleEdit = (id: bigint, clinic: Clinic) => {
-    setEditingId(id);
-    setForm({
-      name: clinic.name,
-      address: clinic.address,
-      phone: clinic.phone,
-      description: clinic.description,
-      mapUrl: clinic.mapUrl,
-      bookingUrl: clinic.bookingUrl,
-    });
-    setShowForm(true);
-    setFormError('');
-  };
-
-  const handleAdd = () => {
-    setEditingId(null);
+  const handleAdd = async () => {
+    await addClinic.mutateAsync({ clinic: form, sessionToken });
     setForm(emptyForm);
-    setShowForm(true);
-    setFormError('');
+    setShowAddForm(false);
   };
 
-  const handleCancel = () => {
-    setShowForm(false);
+  const handleUpdate = async (id: bigint) => {
+    await updateClinic.mutateAsync({ id, clinic: editForm, sessionToken });
     setEditingId(null);
-    setForm(emptyForm);
-    setFormError('');
-  };
-
-  const handleSubmit = async () => {
-    if (!form.name.trim()) {
-      setFormError('Clinic name is required');
-      return;
-    }
-    setFormError('');
-    try {
-      if (editingId !== null) {
-        await updateClinic.mutateAsync({ id: editingId, clinic: form, sessionToken });
-      } else {
-        await addClinic.mutateAsync({ clinic: form, sessionToken });
-      }
-      handleCancel();
-    } catch (e: any) {
-      setFormError(e?.message || 'Failed to save clinic');
-    }
   };
 
   const handleDelete = async (id: bigint) => {
     if (!confirm('Delete this clinic?')) return;
-    try {
-      await deleteClinic.mutateAsync({ id, sessionToken });
-    } catch (e: any) {
-      alert(e?.message || 'Failed to delete');
-    }
+    await deleteClinic.mutateAsync({ id, sessionToken });
   };
 
-  const isPending = addClinic.isPending || updateClinic.isPending;
-
-  const fields: { key: keyof typeof emptyForm; label: string; type?: string; multiline?: boolean }[] = [
-    { key: 'name', label: 'Clinic Name *' },
-    { key: 'address', label: 'Address', multiline: true },
-    { key: 'phone', label: 'Phone Number', type: 'tel' },
-    { key: 'description', label: 'Description', multiline: true },
-    { key: 'mapUrl', label: 'Google Maps Embed URL', type: 'url' },
-    { key: 'bookingUrl', label: 'Booking URL', type: 'url' },
-  ];
+  const ClinicFormFields = ({ data, onChange }: { data: ClinicForm; onChange: (d: ClinicForm) => void }) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {[
+        { key: 'name', label: 'Clinic Name', type: 'text', placeholder: 'Main Clinic' },
+        { key: 'phone', label: 'Phone', type: 'tel', placeholder: '+1 234 567 8900' },
+        { key: 'address', label: 'Address', type: 'text', placeholder: '123 Medical St' },
+        { key: 'mapUrl', label: 'Map URL', type: 'url', placeholder: 'https://maps.google.com/...' },
+        { key: 'bookingUrl', label: 'Booking URL', type: 'url', placeholder: 'https://booking.example.com' },
+      ].map(({ key, label, type, placeholder }) => (
+        <div key={key}>
+          <label className="block text-sm font-medium text-foreground mb-1.5">{label}</label>
+          <input
+            type={type}
+            value={data[key as keyof ClinicForm]}
+            onChange={(e) => onChange({ ...data, [key]: e.target.value })}
+            className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder={placeholder}
+          />
+        </div>
+      ))}
+      <div className="sm:col-span-2">
+        <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+        <textarea
+          value={data.description}
+          onChange={(e) => onChange({ ...data, description: e.target.value })}
+          rows={3}
+          className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
+          placeholder="Clinic description"
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <MapPin className="w-4 h-4 text-emerald-400" />
-          Clinics ({clinics.length})
+        <div>
+          <h2 className="font-display text-xl font-bold text-foreground mb-1">Clinics</h2>
+          <p className="text-sm text-muted-foreground">Manage your clinic locations.</p>
         </div>
-        {!showForm && (
-          <Button size="sm" onClick={handleAdd} className="gap-2 bg-emerald-500 hover:bg-emerald-600 text-white">
-            <Plus className="w-3.5 h-3.5" />
-            Add Clinic
-          </Button>
-        )}
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Clinic
+        </button>
       </div>
 
-      {/* Form */}
-      {showForm && (
-        <div className="border border-emerald-500/30 rounded-xl p-4 space-y-4 bg-emerald-500/5">
-          <h4 className="font-semibold text-sm text-emerald-400">
-            {editingId !== null ? 'Edit Clinic' : 'New Clinic'}
-          </h4>
-          <div className="grid grid-cols-1 gap-3">
-            {fields.map(({ key, label, type, multiline }) => (
-              <div key={key}>
-                <Label className="text-xs text-muted-foreground mb-1 block">{label}</Label>
-                {multiline ? (
-                  <Textarea
-                    value={form[key]}
-                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    placeholder={label.replace(' *', '')}
-                    rows={2}
-                    className="resize-none"
-                  />
-                ) : (
-                  <Input
-                    type={type || 'text'}
-                    value={form[key]}
-                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    placeholder={label.replace(' *', '')}
-                  />
-                )}
-              </div>
-            ))}
+      {/* Add Form */}
+      {showAddForm && (
+        <div className="bg-white rounded-xl border border-primary/30 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">New Clinic</h3>
+            <button onClick={() => setShowAddForm(false)} className="text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          {formError && <p className="text-xs text-destructive">{formError}</p>}
-          <div className="flex gap-2">
-            <Button
-              onClick={handleSubmit}
-              disabled={isPending}
-              size="sm"
-              className="gap-2 bg-emerald-500 hover:bg-emerald-600 text-white"
+          <ClinicFormFields data={form} onChange={setForm} />
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
             >
-              {isPending ? (
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5" />
-              )}
-              {editingId !== null ? 'Update' : 'Add'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleCancel} className="gap-2">
-              <X className="w-3.5 h-3.5" />
               Cancel
-            </Button>
+            </button>
+            <button
+              onClick={handleAdd}
+              disabled={addClinic.isPending || !form.name}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+            >
+              {addClinic.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Add Clinic
+            </button>
           </div>
         </div>
       )}
 
       {/* Clinics List */}
-      <div className="space-y-2">
-        {clinics.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-6">No clinics yet. Add one above.</p>
-        )}
-        {clinics.map(([id, clinic]) => (
-          <div
-            key={id.toString()}
-            className="flex items-start gap-3 p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
-          >
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <MapPin className="w-4 h-4 text-emerald-400" />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : content?.clinics.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No clinics yet. Add your first clinic above.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {content?.clinics.map(([id, clinic]) => (
+            <div key={id.toString()} className="bg-white rounded-xl border border-border p-5">
+              {editingId === id ? (
+                <div className="space-y-4">
+                  <ClinicFormFields data={editForm} onChange={setEditForm} />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleUpdate(id)}
+                      disabled={updateClinic.isPending}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+                    >
+                      {updateClinic.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      Save
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-foreground">{clinic.name}</h4>
+                    <p className="text-sm text-muted-foreground mt-0.5">{clinic.address}</p>
+                    {clinic.phone && <p className="text-sm text-muted-foreground">{clinic.phone}</p>}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        setEditingId(id);
+                        setEditForm({
+                          name: clinic.name,
+                          description: clinic.description,
+                          address: clinic.address,
+                          phone: clinic.phone,
+                          mapUrl: clinic.mapUrl,
+                          bookingUrl: clinic.bookingUrl,
+                        });
+                      }}
+                      className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(id)}
+                      disabled={deleteClinic.isPending}
+                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground">{clinic.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{clinic.address}</p>
-              {clinic.phone && <p className="text-xs text-muted-foreground">{clinic.phone}</p>}
-            </div>
-            <div className="flex gap-1 flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 h-7 text-muted-foreground hover:text-foreground"
-                onClick={() => handleEdit(id, clinic)}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 h-7 text-muted-foreground hover:text-destructive"
-                onClick={() => handleDelete(id)}
-                disabled={deleteClinic.isPending}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

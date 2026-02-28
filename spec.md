@@ -1,14 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Redesign MedProfile Pro's public and admin UI with a professional doctor-oriented aesthetic, glassmorphism effects, smart admin dashboard, and dynamic section visibility.
+**Goal:** Enhance the Doctor Portfolio with an advanced footer, Roboto headings, expanded hero theme settings, and particle effect selection in the admin panel.
 
 **Planned changes:**
-- Hide public-facing sections (About, Clinics, Services, Social Media) entirely when they have no content — no placeholders, skeletons, or empty cards shown to visitors
-- Redesign the public site and admin interface with a medical/clinical color palette (white, deep charcoal, teal/soft emerald accent), Space Grotesk headings, and Inter body text
-- Apply consistent glassmorphism (frosted glass) effects across cards, modals, navigation bar, and admin panel surfaces using backdrop blur, semi-transparent backgrounds, subtle borders, and soft inner glow
-- Redesign the AdminDashboard with a structured sidebar featuring grouped navigation items with icons, clear active state highlighting, and section health indicators showing empty vs. populated status
-- Add inline status indicators (saved, unsaved, loading, success, error) to editor sections within the admin dashboard
-- Ensure all glass surfaces maintain readable text contrast in both light and dark contexts
+- Redesign the Footer into a multi-column layout (branding/bio, quick navigation, contact/clinic info, social media) with a bottom bar, copyright text, divider, and full responsiveness — visually consistent with the rest of the UI (warm neutral tones, teal accents, card-based aesthetic)
+- Import Roboto from Google Fonts and apply it as the primary font for all headings (h1–h6) across all pages and components; update Tailwind config accordingly
+- Expand the HeroSettingsEditor admin panel with new controls: gradient start/end color pickers, overlay opacity slider, text color selector, background blur toggle, glassmorphism intensity slider, hero height selector (compact/normal/full-screen), animation speed control, mouse parallax toggle, and a live preview thumbnail; persist all new fields to the backend and apply them on the public Hero section
+- Add an advanced particle effect selection system to HeroSettingsEditor: a grid of at least 10 named presets (None, Floating Dots, Stars, Snow, Bubbles, Geometric Shapes, DNA Helix, Medical Pulse, Confetti, Fireflies) with animated preview thumbnails, plus fine-tuning controls (particle count, size range, speed, color, opacity); implement particle rendering in the ParticleCanvas component using canvas or CSS animations
 
-**User-visible outcome:** Visitors see only sections with real content on the public profile page. The overall site looks polished and clinically professional. Admins experience a powerful, CMS-like dashboard with glass-styled editors, status badges, and clear visual hierarchy.
+**User-visible outcome:** The site features a polished multi-column footer, Roboto headings throughout, and a greatly enhanced admin hero settings panel where admins can configure gradients, overlays, animations, and rich particle effects that are reflected live on the public hero section.

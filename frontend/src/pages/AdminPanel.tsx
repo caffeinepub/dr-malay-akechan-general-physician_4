@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import AdminLogin from '../components/AdminLogin';
 import AdminDashboard from '../components/AdminDashboard';
 import { useActor } from '../hooks/useActor';
+import { useLogin } from '../hooks/useQueries';
 
 export default function AdminPanel() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState('');
   const { actor } = useActor();
+  const loginMutation = useLogin();
 
   useEffect(() => {
-    // Check both localStorage and sessionStorage for backward compatibility
     const stored =
       localStorage.getItem('adminSessionToken') ||
       sessionStorage.getItem('adminSessionToken');
@@ -24,11 +26,16 @@ export default function AdminPanel() {
     }
   }, [actor]);
 
-  const handleLoginSuccess = (token: string) => {
-    // Store in both for compatibility with EditableField which reads sessionStorage
-    sessionStorage.setItem('adminSessionToken', token);
-    localStorage.setItem('adminSessionToken', token);
-    setSessionToken(token);
+  const handleLogin = async (username: string, password: string) => {
+    setLoginError('');
+    try {
+      const token = await loginMutation.mutateAsync({ username, password });
+      sessionStorage.setItem('adminSessionToken', token);
+      localStorage.setItem('adminSessionToken', token);
+      setSessionToken(token);
+    } catch {
+      setLoginError('Invalid credentials. Please try again.');
+    }
   };
 
   const handleLogout = () => {
@@ -38,7 +45,13 @@ export default function AdminPanel() {
   };
 
   if (!sessionToken) {
-    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <AdminLogin
+        onLogin={handleLogin}
+        error={loginError}
+        isLoading={loginMutation.isPending}
+      />
+    );
   }
 
   return <AdminDashboard sessionToken={sessionToken} onLogout={handleLogout} />;

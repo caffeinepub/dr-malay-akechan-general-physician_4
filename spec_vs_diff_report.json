@@ -1,45 +1,71 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T08:03:35.005Z",
-  "summary": "The diff only modifies project_state.json, which is a planning/state tracking file. All four requirements (REQ-1 through REQ-4) are recorded as 'pending' feature requests but none have been implemented — no actual frontend source files, components, styles, or logic have been added or modified.",
+  "generatedAt": "2026-02-28T15:04:46.330Z",
+  "summary": "The diff implements all four requirements with substantial coverage. REQ-1 (Footer redesign), REQ-2 (Roboto font), REQ-3 (HeroSettingsEditor expansion), and REQ-4 (particle effects) are all addressed. A few specific acceptance criteria have gaps worth noting, particularly around animated preview thumbnails for particle presets and the hero height selector options.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Hide public-facing sections (About, Clinics, Services, Social Media) entirely when they have no content.",
-      "reason": "No frontend component files were modified or created. The requirement is only listed as 'pending' in project_state.json with no implementation.",
+      "id": "REQ-4",
+      "requirement": "Each particle preset should display a small animated preview thumbnail in the admin gallery/grid.",
+      "reason": "The HeroSettingsEditor shows particle presets using emoji icons and descriptions but there is no evidence of actual animated canvas-based or CSS-animated preview thumbnails for each preset in the grid. The diff shows emoji plus text labels, not animated mini-canvases.",
       "evidence": [
-        "project_state.json"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "requirement": "Redesign the overall public-facing UI and admin interface with a professional, doctor-oriented aesthetic using Space Grotesk/Inter typography and clinical color palette.",
-      "reason": "No frontend component, CSS, or configuration files were modified or created. The requirement is only listed as 'pending' in project_state.json.",
-      "evidence": [
-        "project_state.json"
+        "frontend/src/components/admin/HeroSettingsEditor.tsx"
       ]
     },
     {
       "id": "REQ-3",
-      "requirement": "Apply glassmorphism effects consistently across cards, modals, navigation, and panel surfaces.",
-      "reason": "No GlassCard component, CSS, or any UI file was modified or created. The requirement is only listed as 'pending' in project_state.json.",
+      "requirement": "Hero height selector should support options: compact, normal, and full-screen.",
+      "reason": "The IdleHeroSettings type in both backend/main.mo and backend/migration.mo defines heroHeight as only a single variant normal. The compact and full-screen variants are not present. The HeroSettingsEditor and Home.tsx do not appear to apply different height classes based on this setting.",
       "evidence": [
-        "project_state.json"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "requirement": "Redesign AdminDashboard with grouped sidebar navigation, active states, section health indicators, and card-based editors with status badges.",
-      "reason": "No AdminDashboard or sidebar component files were modified or created. The requirement is only listed as 'pending' in project_state.json.",
-      "evidence": [
-        "project_state.json"
+        "backend/main.mo",
+        "backend/migration.mo",
+        "frontend/src/components/admin/HeroSettingsEditor.tsx",
+        "frontend/src/pages/Home.tsx"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.98,
+  "hallucinated_features": [
+    {
+      "description": "A Network particle preset (11th preset) was added beyond the 10 required presets.",
+      "reason": "The build request specifies at minimum 10 named presets. The diff adds an 11th preset Network with connected nodes description. This was not in the requested preset list.",
+      "evidence": [
+        "frontend/src/components/admin/HeroSettingsEditor.tsx"
+      ]
+    },
+    {
+      "description": "A backend migration module was added as a separate file backend/migration.mo.",
+      "reason": "The build request constraints state all Motoko logic must remain in the single backend/main.mo actor file. Adding a separate migration.mo module may violate this constraint.",
+      "evidence": [
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "description": "caffeine.ai attribution was added to the Footer.",
+      "reason": "The build request does not mention any third-party attribution in the footer. The frontend-file-summaries.txt mentions caffeine.ai attribution in the Footer description, which was not requested.",
+      "evidence": [
+        "frontend-file-summaries.txt",
+        "frontend/src/components/Footer.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.78,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.html",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/components/ParticleCanvas.tsx",
+    "frontend/src/components/admin/HeroSettingsEditor.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/pages/About.tsx",
+    "frontend/src/pages/Clinics.tsx",
+    "frontend/src/pages/Home.tsx",
+    "frontend/src/pages/Services.tsx",
+    "frontend/src/pages/SocialMedia.tsx",
+    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

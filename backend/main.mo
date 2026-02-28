@@ -2,15 +2,15 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
+import Float "mo:core/Float";
 import Principal "mo:core/Principal";
 
-
+import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 
-// Apply migration on upgrade
-
+(with migration = Migration.run)
 actor {
   // Mix in storage functionality
   include MixinStorage();
@@ -19,35 +19,29 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // ── User Profile ─────────────────────────────────────────────────────────────
-  type UserProfile = {
-    name : Text;
-  };
+  let userProfiles = Map.empty<Principal, { name : Text }>();
 
-  let userProfiles = Map.empty<Principal, UserProfile>();
-
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+  public query ({ caller }) func getCallerUserProfile() : async ?{ name : Text } {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can get profiles");
     };
     userProfiles.get(caller);
   };
 
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?{ name : Text } {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
   };
 
-  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+  public shared ({ caller }) func saveCallerUserProfile(profile : { name : Text }) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
   };
 
-  // ── Domain Types ─────────────────────────────────────────────────────────────
   type Service = {
     title : Text;
     description : Text;
@@ -69,9 +63,30 @@ actor {
     url : Text;
   };
 
-  type ServiceId = Nat;
-  type ClinicId = Nat;
-  type SocialLinkId = Nat;
+  type IdleHeroSettings = {
+    _version : Nat;
+    bgGradientStart : Text;
+    bgGradientEnd : Text;
+    overlayOpacity : Float;
+    textColor : Text;
+    backgroundBlur : Bool;
+    glassmorphismIntensity : Float;
+    heroHeight : { #normal };
+    animationSpeed : Float;
+    mouseParallaxEnabled : Bool;
+    particlePreset : Text;
+    particleCount : Nat;
+    particleMinSize : Float;
+    particleMaxSize : Float;
+    particleSpeed : Float;
+    particleColor : Text;
+    particleOpacity : Float;
+  };
+
+  type Images = {
+    heroBackgroundUrl : Text;
+    heroBackgroundBase64 : Text;
+  };
 
   type ServiceInput = {
     title : Text;
@@ -94,25 +109,6 @@ actor {
     url : Text;
   };
 
-  type Images = {
-    heroBackgroundUrl : Text;
-    heroBackgroundBase64 : Text;
-  };
-
-  type HeroSettings = {
-    particleCount : Nat;
-    particleSpeed : Float;
-    particleSize : Float;
-    particleColor : Text;
-    showConnectionLines : Bool;
-    mouseInteraction : Bool;
-    backgroundEffect : Text;
-    glassmorphismEnabled : Bool;
-    heroGradientStart : Text;
-    heroGradientEnd : Text;
-  };
-
-  // ── Stable State ─────────────────────────────────────────────────────────────
   var clinics = Map.empty<Nat, Clinic>();
   var services = Map.empty<Nat, Service>();
   let socialLinks = Map.empty<Nat, SocialLink>();
@@ -125,17 +121,24 @@ actor {
   var headerImageUrl : Text = "";
   var headerImageBase64 : Text = "";
   var footerContent : Text = "";
-  var heroSettings : HeroSettings = {
-    particleCount = 70;
-    particleSpeed = 1.5;
-    particleSize = 2.5;
-    particleColor = "#90EE90";
-    showConnectionLines = true;
-    mouseInteraction = true;
-    backgroundEffect = "gradient";
-    glassmorphismEnabled = true;
-    heroGradientStart = "#40A1FF";
-    heroGradientEnd = "#A993FF";
+  var heroSettings = {
+    _version = 1;
+    bgGradientStart = "#40A1FF";
+    bgGradientEnd = "#A993FF";
+    overlayOpacity = 0.95;
+    textColor = "#ffffff";
+    backgroundBlur = true;
+    glassmorphismIntensity = 0.7;
+    heroHeight = #normal;
+    animationSpeed = 1.0;
+    mouseParallaxEnabled = true;
+    particlePreset = "Floating Dots";
+    particleCount = 120;
+    particleMinSize = 0.15;
+    particleMaxSize = 2.8;
+    particleSpeed = 1.2;
+    particleColor = "#38F9D7";
+    particleOpacity = 0.85;
   };
 
   var images : Images = {
@@ -150,18 +153,12 @@ actor {
   var nextServiceId = 0;
   var nextSocialLinkId = 0;
 
-  // ── Session Token Helpers ────────────────────────────────────────────────────
-
-  /// Validates a session token; traps if invalid.
   func requireValidSession(sessionToken : Text) {
     if (not sessionTokens.containsKey(sessionToken)) {
       Runtime.trap("Unauthorized: Invalid session token");
     };
   };
 
-  // ── Authentication ───────────────────────────────────────────────────────────
-
-  /// Login with username/password; returns a session token on success.
   public shared ({ caller }) func login(username : Text, password : Text) : async Text {
     if (username == adminUsername and password == adminPassword) {
       let sessionToken = caller.toText();
@@ -172,23 +169,19 @@ actor {
     };
   };
 
-  /// Validates a session token (public, read-only check).
   public shared ({ caller }) func validateSessionToken(sessionToken : Text) : async () {
     requireValidSession(sessionToken);
   };
 
-  // ── Hero Settings Endpoints ──────────────────────────────────────────────────
-
-  public query ({ caller }) func getHeroSettings() : async HeroSettings {
+  // Hero Settings Endpoints
+  public query ({ caller }) func getHeroSettings() : async IdleHeroSettings {
     heroSettings;
   };
 
-  public shared ({ caller }) func updateHeroSettings(newSettings : HeroSettings, sessionToken : Text) : async () {
+  public shared ({ caller }) func updateHeroSettings(newSettings : IdleHeroSettings, sessionToken : Text) : async () {
     requireValidSession(sessionToken);
-    heroSettings := newSettings;
+    heroSettings := { newSettings with _version = 1 };
   };
-
-  // ── Clinic Content Update by Upgrade ─────────────────────────────────────────
 
   public shared ({ caller }) func upgradePersistentContent(
     heroBgUrl : Text,
@@ -265,7 +258,7 @@ actor {
     aboutImageBase64 : Text;
     headerImageUrl : Text;
     headerImageBase64 : Text;
-    heroSettings : HeroSettings;
+    heroSettings : IdleHeroSettings;
     footerContent : Text;
     clinics : [(Nat, Clinic)];
     services : [(Nat, Service)];

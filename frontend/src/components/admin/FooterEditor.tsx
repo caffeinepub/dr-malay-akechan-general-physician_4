@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Loader2 } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { useUpdateFooterContent } from '../../hooks/useQueries';
 
 interface FooterEditorProps {
@@ -9,46 +9,42 @@ interface FooterEditorProps {
 
 export default function FooterEditor({ sessionToken, currentContent }: FooterEditorProps) {
   const [content, setContent] = useState(currentContent);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState('');
-
   const updateFooter = useUpdateFooterContent();
 
   const handleSave = async () => {
-    setError('');
-    setSaved(false);
-    try {
-      await updateFooter.mutateAsync({ content, sessionToken });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to save');
-    }
+    await updateFooter.mutateAsync({ content, sessionToken });
   };
 
-  const labelClass = "block text-xs font-medium font-body text-slate-400 uppercase tracking-wider mb-1.5";
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 max-w-2xl">
       <div>
-        <label className={labelClass}>Footer Content Text</label>
+        <h2 className="font-display text-xl font-bold text-foreground mb-1">Footer Content</h2>
+        <p className="text-sm text-muted-foreground">Edit the footer description text.</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-border p-6">
+        <h3 className="font-semibold text-foreground mb-4">Footer Description</h3>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={5}
-          placeholder="Enter footer content..."
-          className="w-full px-3 py-2 rounded-sharp tech-input text-sm resize-none"
+          className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-y"
+          placeholder="Enter footer description text..."
         />
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={updateFooter.isPending}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+          >
+            {updateFooter.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Footer
+          </button>
+        </div>
+        {updateFooter.isSuccess && (
+          <p className="mt-2 text-sm text-success text-right">Saved successfully!</p>
+        )}
       </div>
-      {error && <p className="text-xs text-red-400 font-body">{error}</p>}
-      <button
-        onClick={handleSave}
-        disabled={updateFooter.isPending}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-sharp bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-navy-800 font-display font-semibold text-sm transition-all duration-200 glow-cyan-sm"
-      >
-        {updateFooter.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-        {saved ? 'Saved!' : 'Save Footer'}
-      </button>
     </div>
   );
 }

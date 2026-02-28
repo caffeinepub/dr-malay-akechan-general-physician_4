@@ -1,101 +1,83 @@
 import React, { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Shield, Eye, EyeOff, ArrowLeft, Loader2, Zap } from 'lucide-react';
-import { useLogin } from '../hooks/useQueries';
+import { Stethoscope, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 
 interface AdminLoginProps {
-  onLoginSuccess: (token: string) => void;
+  onLogin: (username: string, password: string) => Promise<void>;
+  error?: string;
+  isLoading?: boolean;
 }
 
-export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
+export default function AdminLogin({ onLogin, error, isLoading }: AdminLoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-
-  const loginMutation = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    try {
-      const token = await loginMutation.mutateAsync({ username, password });
-      onLoginSuccess(token);
-    } catch {
-      setError('Invalid credentials. Please try again.');
-    }
+    await onLogin(username, password);
   };
 
   return (
-    <div className="min-h-screen bg-navy-800 flex items-center justify-center relative overflow-hidden">
-      {/* Grid pattern */}
-      <div
-        className="absolute inset-0 opacity-40 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(oklch(0.75 0.18 200 / 0.05) 1px, transparent 1px), linear-gradient(90deg, oklch(0.75 0.18 200 / 0.05) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-
-      {/* Glow orb */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-cyan-500/5 blur-3xl pointer-events-none" />
-
-      <div className="relative w-full max-w-md px-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
         {/* Back link */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 text-sm font-body mb-8 transition-colors duration-200"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          Return to Homepage
+          Back to Homepage
         </Link>
 
-        {/* Login Card */}
-        <div className="bg-navy-700 border border-cyan-500/20 rounded-card shadow-card-dark p-8 animate-border-glow">
+        {/* Card */}
+        <div className="bg-white rounded-2xl border border-border shadow-card p-8">
           {/* Header */}
-          <div className="flex flex-col items-center gap-4 mb-8">
-            <div className="w-16 h-16 rounded-card bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center glow-cyan-sm">
-              <Shield className="w-8 h-8 text-cyan-400" />
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-full mb-4">
+              <Stethoscope className="w-7 h-7 text-primary" />
             </div>
-            <div className="text-center">
-              <h1 className="font-display font-bold text-2xl text-white">Admin Access</h1>
-              <p className="text-slate-400 text-sm font-body mt-1">Secure administrative portal</p>
-            </div>
+            <h1 className="font-display text-2xl font-bold text-foreground">Admin Login</h1>
+            <p className="text-sm text-muted-foreground mt-1">Sign in to manage your profile</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium font-body text-slate-400 uppercase tracking-wider">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-foreground mb-1.5">
                 Username
               </label>
               <input
+                id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
                 required
-                className="w-full px-4 py-3 rounded-sharp tech-input text-sm"
+                autoComplete="username"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors bg-white"
+                placeholder="Enter username"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium font-body text-slate-400 uppercase tracking-wider">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
                 Password
               </label>
               <div className="relative">
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
                   required
-                  className="w-full px-4 py-3 pr-12 rounded-sharp tech-input text-sm"
+                  autoComplete="current-password"
+                  className="w-full px-3.5 py-2.5 pr-10 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors bg-white"
+                  placeholder="Enter password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-400 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -103,35 +85,20 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-sharp bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-body">
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loginMutation.isPending}
-              className="w-full py-3 rounded-sharp bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-navy-800 font-display font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 glow-cyan-sm hover:glow-cyan"
+              disabled={isLoading}
+              className="w-full py-2.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loginMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Authenticating...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4" />
-                  Access Dashboard
-                </>
-              )}
+              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-        </div>
-
-        {/* Status indicator */}
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 pulse-dot" />
-          <span className="text-slate-500 text-xs font-body">Secure connection established</span>
         </div>
       </div>
     </div>

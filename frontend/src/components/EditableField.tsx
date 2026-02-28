@@ -1,333 +1,240 @@
-import React, { useState, useRef } from 'react';
-import { Pencil, Check, X, Image as ImageIcon, Trash2, Upload, Link } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState, useEffect, useRef } from 'react';
+import { Pencil, Check, X } from 'lucide-react';
 
 function getSessionToken(): string | null {
   return sessionStorage.getItem('adminSessionToken') || localStorage.getItem('adminSessionToken');
 }
 
-// ── EditableField ─────────────────────────────────────────────────────────────
-
 interface EditableFieldProps {
-  value: string;
-  onSave: (newValue: string) => Promise<void> | void;
-  /** New prop name */
-  type?: 'text' | 'textarea' | 'url';
-  /** Legacy prop name — alias for `type` */
-  fieldType?: 'text' | 'textarea' | 'url';
-  /** New prop name */
-  label?: string;
-  /** Legacy prop name — alias for `label` */
-  fieldLabel?: string;
-  children: React.ReactNode;
+  currentValue: string;
+  onSave: (value: string) => Promise<void>;
+  placeholder?: string;
+  multiline?: boolean;
   className?: string;
 }
 
 export function EditableField({
-  value,
+  currentValue,
   onSave,
-  type,
-  fieldType,
-  label,
-  fieldLabel,
-  children,
+  placeholder = 'Click to edit',
+  multiline = false,
   className = '',
 }: EditableFieldProps) {
-  const sessionToken = getSessionToken();
-  const [open, setOpen] = useState(false);
-  const [editValue, setEditValue] = useState(value);
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(currentValue);
   const [saving, setSaving] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
-  // Resolve aliases
-  const resolvedType = type ?? fieldType ?? 'text';
-  const resolvedLabel = label ?? fieldLabel;
+  useEffect(() => {
+    setIsAdmin(!!getSessionToken());
+  }, []);
 
-  if (!sessionToken) return <>{children}</>;
+  useEffect(() => {
+    setValue(currentValue);
+  }, [currentValue]);
 
-  const handleOpen = (isOpen: boolean) => {
-    if (isOpen) setEditValue(value);
-    setOpen(isOpen);
-  };
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  if (!isAdmin) {
+    return <span className={className}>{currentValue || placeholder}</span>;
+  }
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(editValue);
-      setOpen(false);
+      await onSave(value);
+      setIsEditing(false);
+    } catch (e) {
+      console.error('Save failed', e);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && resolvedType !== 'textarea') {
-      e.preventDefault();
-      handleSave();
-    }
-    if (e.key === 'Escape') setOpen(false);
+  const handleCancel = () => {
+    setValue(currentValue);
+    setIsEditing(false);
   };
 
-  return (
-    <Popover open={open} onOpenChange={handleOpen}>
-      <PopoverTrigger asChild>
-        <div
-          className={`group relative inline-block cursor-pointer ${className}`}
-          title={`Edit ${resolvedLabel || 'field'}`}
+  if (isEditing) {
+    return (
+      <span className="inline-flex items-start gap-1 w-full">
+        {multiline ? (
+          <textarea
+            ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="flex-1 text-sm border border-primary rounded px-2 py-1 bg-white text-foreground resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder={placeholder}
+          />
+        ) : (
+          <input
+            ref={inputRef as React.RefObject<HTMLInputElement>}
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="flex-1 text-sm border border-primary rounded px-2 py-1 bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder={placeholder}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSave();
+              if (e.key === 'Escape') handleCancel();
+            }}
+          />
+        )}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+          title="Save"
         >
-          {children}
-          <span className="absolute -top-2 -right-2 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500 text-white opacity-0 shadow-lg shadow-cyan-500/40 transition-all duration-200 group-hover:opacity-100 pointer-events-none">
-            <Pencil className="h-3 w-3" />
-          </span>
-          <span className="absolute inset-0 rounded opacity-0 ring-2 ring-cyan-400/60 ring-offset-1 transition-all duration-200 group-hover:opacity-100 pointer-events-none" />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-80 p-4"
-        side="top"
-        align="start"
-      >
-        <div className="space-y-3">
-          {resolvedLabel && (
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
-              {resolvedLabel}
-            </p>
-          )}
-          {resolvedType === 'textarea' ? (
-            <Textarea
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="min-h-[100px] text-sm resize-none"
-              autoFocus
-            />
-          ) : (
-            <Input
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              type={resolvedType === 'url' ? 'url' : 'text'}
-              className="text-sm"
-              autoFocus
-            />
-          )}
-          <div className="flex gap-2 justify-end">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setOpen(false)}
-              disabled={saving}
-              className="h-7 px-2"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={saving}
-              className="h-7 px-3 bg-cyan-500 hover:bg-cyan-600 text-white"
-            >
-              {saving ? (
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
-                  Saving
-                </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <Check className="h-3 w-3" />
-                  Save
-                </span>
-              )}
-            </Button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+          <Check className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleCancel}
+          className="p-1 text-muted-foreground hover:bg-muted rounded transition-colors"
+          title="Cancel"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`group inline-flex items-center gap-1 cursor-pointer hover:text-primary transition-colors ${className}`}
+      onClick={() => setIsEditing(true)}
+      title="Click to edit"
+    >
+      <span>{currentValue || <span className="text-muted-foreground italic">{placeholder}</span>}</span>
+      <Pencil className="w-3.5 h-3.5 opacity-0 group-hover:opacity-60 transition-opacity flex-shrink-0" />
+    </span>
   );
 }
 
-// ── EditableImageField ────────────────────────────────────────────────────────
-
 interface EditableImageFieldProps {
-  currentUrl?: string;
-  currentBase64?: string;
-  onSaveUrl?: (url: string) => Promise<void> | void;
-  onSaveBase64?: (base64: string) => Promise<void> | void;
-  onDelete?: () => Promise<void> | void;
-  label?: string;
-  children: React.ReactNode;
-  className?: string;
+  currentImageUrl?: string;
+  currentImageBase64?: string;
+  onUpload?: (base64: string) => Promise<void>;
+  onUpdateUrl?: (url: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
+  placeholder?: string;
 }
 
 export function EditableImageField({
-  currentUrl,
-  currentBase64,
-  onSaveUrl,
-  onSaveBase64,
+  currentImageUrl,
+  currentImageBase64,
+  onUpload,
+  onUpdateUrl,
   onDelete,
-  label,
-  children,
-  className = '',
+  placeholder = 'Add image',
 }: EditableImageFieldProps) {
-  const sessionToken = getSessionToken();
-  const [open, setOpen] = useState(false);
-  const [urlValue, setUrlValue] = useState(currentUrl || '');
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+  const [urlInput, setUrlInput] = useState(currentImageUrl || '');
+  const [uploading, setUploading] = useState(false);
 
-  if (!sessionToken) return <>{children}</>;
+  useEffect(() => {
+    setIsAdmin(!!getSessionToken());
+  }, []);
+
+  const displayUrl = currentImageBase64
+    ? `data:image/jpeg;base64,${currentImageBase64}`
+    : currentImageUrl || null;
+
+  if (!isAdmin) {
+    return displayUrl ? (
+      <img src={displayUrl} alt="Profile" className="w-full h-full object-cover" />
+    ) : null;
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadStatus('File too large (max 5MB)');
-      return;
-    }
-    setUploadStatus('Converting...');
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      setSaving(true);
-      setUploadStatus('Saving...');
-      try {
-        await onSaveBase64?.(base64);
-        setOpen(false);
-        setUploadStatus('');
-      } catch {
-        setUploadStatus('Error saving');
-      } finally {
-        setSaving(false);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSaveUrl = async () => {
-    if (!urlValue.trim()) return;
-    setSaving(true);
+    if (!file || !onUpload) return;
+    setUploading(true);
     try {
-      await onSaveUrl?.(urlValue.trim());
-      setOpen(false);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1];
+        await onUpload(base64);
+        setShowPanel(false);
+      };
+      reader.readAsDataURL(file);
     } finally {
-      setSaving(false);
+      setUploading(false);
     }
   };
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      await onDelete?.();
-      setOpen(false);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const hasImage = !!(currentUrl || currentBase64);
-  const previewSrc = currentBase64 || currentUrl;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div
-          className={`group relative inline-block cursor-pointer ${className}`}
-          title={`Edit ${label || 'image'}`}
-        >
-          {children}
-          <span className="absolute inset-0 z-50 flex items-center justify-center rounded opacity-0 bg-black/40 transition-all duration-200 group-hover:opacity-100 pointer-events-none">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500 text-white shadow-lg">
-              <ImageIcon className="h-4 w-4" />
-            </span>
-          </span>
+    <div className="relative group">
+      {displayUrl ? (
+        <img src={displayUrl} alt="Profile" className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-sm">
+          {placeholder}
         </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-4" side="top" align="start">
-        <div className="space-y-3">
-          {label && (
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wider">{label}</p>
-          )}
-
-          {previewSrc && (
-            <div className="relative rounded overflow-hidden border border-border">
-              <img src={previewSrc} alt="Preview" className="w-full h-24 object-cover" />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={saving}
-              className="w-full h-8 text-xs"
-            >
-              <Upload className="h-3 w-3 mr-1" />
-              Upload Image
-            </Button>
-
-            {uploadStatus && (
-              <p className={`text-xs ${uploadStatus.includes('Error') ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {uploadStatus}
-              </p>
-            )}
-
-            <div className="flex gap-2">
-              <Input
-                value={urlValue}
-                onChange={(e) => setUrlValue(e.target.value)}
-                placeholder="Or paste image URL..."
-                className="flex-1 h-8 text-xs"
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveUrl()}
+      )}
+      <button
+        onClick={() => setShowPanel(!showPanel)}
+        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-medium rounded-full"
+      >
+        Edit Image
+      </button>
+      {showPanel && (
+        <div className="absolute top-full left-0 mt-2 bg-white border border-border rounded-lg shadow-card-hover p-4 z-50 w-64 space-y-3">
+          {onUpload && (
+            <label className="block">
+              <span className="text-xs font-medium text-muted-foreground">Upload file</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={uploading}
+                className="mt-1 block w-full text-xs text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
-              <Button
-                size="sm"
-                onClick={handleSaveUrl}
-                disabled={saving || !urlValue.trim()}
-                className="h-8 px-2 bg-cyan-500 hover:bg-cyan-600 text-white"
-              >
-                <Link className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-
-          {hasImage && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="w-full h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              {deleting ? (
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 animate-spin rounded-full border border-destructive border-t-transparent" />
-                  Removing...
-                </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <Trash2 className="h-3 w-3" />
-                  Remove Image
-                </span>
-              )}
-            </Button>
+            </label>
           )}
+          {onUpdateUrl && (
+            <div>
+              <span className="text-xs font-medium text-muted-foreground">Or enter URL</span>
+              <div className="flex gap-1 mt-1">
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  placeholder="https://..."
+                  className="flex-1 text-xs border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  onClick={async () => { await onUpdateUrl(urlInput); setShowPanel(false); }}
+                  className="px-2 py-1 bg-primary text-primary-foreground text-xs rounded hover:bg-primary/90"
+                >
+                  Set
+                </button>
+              </div>
+            </div>
+          )}
+          {onDelete && displayUrl && (
+            <button
+              onClick={async () => { await onDelete(); setShowPanel(false); }}
+              className="w-full text-xs text-destructive hover:bg-destructive/10 py-1 rounded transition-colors"
+            >
+              Remove image
+            </button>
+          )}
+          <button
+            onClick={() => setShowPanel(false)}
+            className="w-full text-xs text-muted-foreground hover:bg-muted py-1 rounded transition-colors"
+          >
+            Close
+          </button>
         </div>
-      </PopoverContent>
-    </Popover>
+      )}
+    </div>
   );
 }
-
-export default EditableField;

@@ -1,71 +1,52 @@
 import React from 'react';
+import { useGetAllContent } from '../hooks/useQueries';
 import ClinicCard from '../components/ClinicCard';
+import { MapPin } from 'lucide-react';
 
-interface Clinic {
-  name: string;
-  address: string;
-  phone: string;
-  description: string;
-  mapUrl: string;
-  bookingUrl: string;
+interface Props {
+  onUpdateClinicName?: (id: bigint, name: string) => Promise<void>;
+  onUpdateClinicDescription?: (id: bigint, description: string) => Promise<void>;
 }
 
-interface ClinicsProps {
-  clinics?: Array<[bigint, Clinic]>;
-  onUpdateName?: (id: bigint, name: string) => void;
-  onUpdateDescription?: (id: bigint, desc: string) => void;
-}
-
-const accentCycle: Array<'cyan' | 'magenta' | 'emerald' | 'amber'> = ['cyan', 'magenta', 'emerald', 'amber'];
-
-export default function Clinics({
-  clinics = [],
-  onUpdateName,
-  onUpdateDescription,
-}: ClinicsProps) {
-  if (clinics.length === 0) return null;
+export default function Clinics({ onUpdateClinicName, onUpdateClinicDescription }: Props) {
+  const { data: content } = useGetAllContent();
+  const clinics = content?.clinics || [];
 
   return (
-    <section id="clinics" className="py-24 bg-navy-800 relative overflow-hidden">
-      {/* Grid pattern */}
-      <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(oklch(0.75 0.18 200 / 0.04) 1px, transparent 1px), linear-gradient(90deg, oklch(0.75 0.18 200 / 0.04) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Label */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-px bg-cyan-500/60" />
-          <span className="text-cyan-400 text-xs font-body font-medium uppercase tracking-widest">Locations</span>
-          <div className="flex-1 h-px bg-slate-700/50" />
-        </div>
-
-        <div className="mb-12">
-          <h2 className="font-display font-bold text-4xl text-white leading-tight">
-            Our <span className="gradient-text-cyan">Clinic Locations</span>
+    <section id="clinics" className="py-24 bg-background">
+      <div className="max-w-6xl mx-auto px-6">
+        {/* Section header */}
+        <div className="text-center mb-16">
+          <p className="text-xs font-semibold font-heading uppercase tracking-widest text-primary mb-2">Locations</p>
+          <h2 className="text-4xl md:text-5xl font-bold font-heading text-foreground">
+            Our Clinics
           </h2>
-          <p className="text-slate-400 font-body mt-3 max-w-xl">
-            Find a clinic near you and book your appointment today.
-          </p>
+          <div className="w-16 h-0.5 mx-auto mt-4 bg-gradient-to-r from-transparent via-primary to-transparent" />
         </div>
 
-        {/* Clinics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {clinics.map(([id, clinic], index) => (
-            <ClinicCard
-              key={id.toString()}
-              id={id}
-              clinic={clinic}
-              accent={accentCycle[index % accentCycle.length]}
-              onUpdateName={onUpdateName}
-              onUpdateDescription={onUpdateDescription}
-            />
-          ))}
-        </div>
+        {clinics.length === 0 ? (
+          <div className="text-center text-muted-foreground py-16">
+            <MapPin className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p>No clinics listed yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clinics.map(([id, clinic]) => (
+              <ClinicCard
+                key={id.toString()}
+                id={id}
+                name={clinic.name}
+                description={clinic.description}
+                address={clinic.address}
+                phone={clinic.phone}
+                mapUrl={clinic.mapUrl}
+                bookingUrl={clinic.bookingUrl}
+                onUpdateName={onUpdateClinicName}
+                onUpdateDescription={onUpdateClinicDescription}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

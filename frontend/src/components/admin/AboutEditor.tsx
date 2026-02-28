@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Save, Loader2 } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
+import ImageUploadField from './ImageUploadField';
 import {
   useUpdateAboutSection,
   useUpdateAboutImageBase64,
   useDeleteAboutImage,
 } from '../../hooks/useQueries';
-import ImageUploadField from './ImageUploadField';
 
 interface AboutEditorProps {
   sessionToken: string;
   currentText: string;
   currentImageUrl: string;
-  currentImageBase64?: string;
+  currentImageBase64: string;
 }
 
 export default function AboutEditor({
@@ -20,79 +20,70 @@ export default function AboutEditor({
   currentImageUrl,
   currentImageBase64,
 }: AboutEditorProps) {
-  const [text, setText] = useState(currentText);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState('');
+  const [bioText, setBioText] = useState(currentText);
+  const [imageUrl, setImageUrl] = useState(currentImageUrl);
 
   const updateAbout = useUpdateAboutSection();
-  const updateAboutImage = useUpdateAboutImageBase64();
-  const deleteAboutImage = useDeleteAboutImage();
+  const updateImageBase64 = useUpdateAboutImageBase64();
+  const deleteImage = useDeleteAboutImage();
 
-  const handleSave = async () => {
-    setError('');
-    setSaved(false);
-    try {
-      await updateAbout.mutateAsync({ text, imageUrl: currentImageUrl, sessionToken });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to save');
-    }
+  const handleSaveBio = async () => {
+    await updateAbout.mutateAsync({ text: bioText, imageUrl, sessionToken });
   };
 
-  const labelClass = "block text-xs font-medium font-body text-slate-400 uppercase tracking-wider mb-1.5";
+  const handleUploadImage = async (base64: string) => {
+    await updateImageBase64.mutateAsync({ imageBase64: base64, sessionToken });
+  };
+
+  const handleUpdateUrl = async (url: string) => {
+    setImageUrl(url);
+    await updateAbout.mutateAsync({ text: bioText, imageUrl: url, sessionToken });
+  };
+
+  const handleDeleteImage = async () => {
+    await deleteImage.mutateAsync({ sessionToken });
+    setImageUrl('');
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Bio Text */}
+    <div className="space-y-6 max-w-2xl">
       <div>
-        <h3 className="font-display font-semibold text-white text-sm mb-4 pb-2 border-b border-slate-700/50">
-          Bio Text
-        </h3>
-        <div className="space-y-3">
-          <div>
-            <label className={labelClass}>About Section Content</label>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              rows={6}
-              placeholder="Write about the doctor..."
-              className="w-full px-3 py-2 rounded-sharp tech-input text-sm resize-none"
-            />
-          </div>
-          {error && <p className="text-xs text-red-400 font-body">{error}</p>}
-          <button
-            onClick={handleSave}
-            disabled={updateAbout.isPending}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-sharp bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-navy-800 font-display font-semibold text-sm transition-all duration-200 glow-cyan-sm"
-          >
-            {updateAbout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saved ? 'Saved!' : 'Save Bio'}
-          </button>
-        </div>
+        <h2 className="font-display text-xl font-bold text-foreground mb-1">About Section</h2>
+        <p className="text-sm text-muted-foreground">Edit your bio and profile image.</p>
       </div>
 
       {/* Profile Image */}
-      <div>
-        <h3 className="font-display font-semibold text-white text-sm mb-4 pb-2 border-b border-slate-700/50">
-          Profile Image
-        </h3>
+      <div className="bg-white rounded-xl border border-border p-6">
+        <h3 className="font-semibold text-foreground mb-4">Profile Image</h3>
         <ImageUploadField
-          label="Doctor Profile Photo"
-          currentImageBase64={currentImageBase64}
           currentImageUrl={currentImageUrl}
-          onUpload={async (base64) => {
-            await updateAboutImage.mutateAsync({ imageBase64: base64, sessionToken });
-          }}
-          onUpdateUrl={async (url) => {
-            await updateAbout.mutateAsync({ text, imageUrl: url, sessionToken });
-          }}
-          onDelete={async () => {
-            await deleteAboutImage.mutateAsync({ sessionToken });
-          }}
-          isUploading={updateAboutImage.isPending}
-          isDeleting={deleteAboutImage.isPending}
+          currentImageBase64={currentImageBase64}
+          onUpload={handleUploadImage}
+          onUpdateUrl={handleUpdateUrl}
+          onDelete={handleDeleteImage}
         />
+      </div>
+
+      {/* Bio */}
+      <div className="bg-white rounded-xl border border-border p-6">
+        <h3 className="font-semibold text-foreground mb-4">Biography</h3>
+        <textarea
+          value={bioText}
+          onChange={(e) => setBioText(e.target.value)}
+          rows={8}
+          className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-y"
+          placeholder="Write your professional biography..."
+        />
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={handleSaveBio}
+            disabled={updateAbout.isPending}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+          >
+            {updateAbout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Bio
+          </button>
+        </div>
       </div>
     </div>
   );

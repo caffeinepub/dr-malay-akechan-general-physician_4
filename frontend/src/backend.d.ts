@@ -15,6 +15,25 @@ export interface Clinic {
     phone: string;
     bookingUrl: string;
 }
+export interface IdleHeroSettings {
+    heroHeight: Variant_normal;
+    glassmorphismIntensity: number;
+    backgroundBlur: boolean;
+    particlePreset: string;
+    particleMaxSize: number;
+    particleOpacity: number;
+    bgGradientStart: string;
+    particleColor: string;
+    particleCount: bigint;
+    mouseParallaxEnabled: boolean;
+    animationSpeed: number;
+    particleSpeed: number;
+    particleMinSize: number;
+    overlayOpacity: number;
+    _version: bigint;
+    bgGradientEnd: string;
+    textColor: string;
+}
 export interface ServiceInput {
     title: string;
     description: string;
@@ -47,25 +66,13 @@ export interface SocialLinkInput {
     url: string;
     platform: string;
 }
-export interface HeroSettings {
-    showConnectionLines: boolean;
-    backgroundEffect: string;
-    particleColor: string;
-    particleCount: bigint;
-    heroGradientStart: string;
-    particleSpeed: number;
-    heroGradientEnd: string;
-    mouseInteraction: boolean;
-    particleSize: number;
-    glassmorphismEnabled: boolean;
-}
-export interface UserProfile {
-    name: string;
-}
 export enum UserRole {
     admin = "admin",
     user = "user",
     guest = "guest"
+}
+export enum Variant_normal {
+    normal = "normal"
 }
 export interface backendInterface {
     addClinic(clinic: ClinicInput, sessionToken: string): Promise<void>;
@@ -85,7 +92,7 @@ export interface backendInterface {
     getAllContent(): Promise<{
         clinics: Array<[bigint, Clinic]>;
         headerImageUrl: string;
-        heroSettings: HeroSettings;
+        heroSettings: IdleHeroSettings;
         siteTitle: string;
         aboutImageBase64: string;
         aboutSection: string;
@@ -98,35 +105,35 @@ export interface backendInterface {
     }>;
     getAllServices(): Promise<Array<[bigint, Service]>>;
     getAllSocialLinks(): Promise<Array<[bigint, SocialLink]>>;
-    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserProfile(): Promise<{
+        name: string;
+    } | null>;
     getCallerUserRole(): Promise<UserRole>;
     getFooterContent(): Promise<string>;
     getHeaderImageBase64(): Promise<string>;
-    getHeroSettings(): Promise<HeroSettings>;
+    getHeroSettings(): Promise<IdleHeroSettings>;
     getImages(): Promise<Images>;
     getServiceIconBase64(serviceId: bigint): Promise<string>;
     getSiteTitle(): Promise<string>;
-    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUserProfile(user: Principal): Promise<{
+        name: string;
+    } | null>;
     isCallerAdmin(): Promise<boolean>;
-    /**
-     * / Login with username/password; returns a session token on success.
-     */
     login(username: string, password: string): Promise<string>;
-    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveCallerUserProfile(profile: {
+        name: string;
+    }): Promise<void>;
     updateAboutImageBase64(imageBase64: string, sessionToken: string): Promise<void>;
     updateAboutSection(text: string, imageUrl: string, sessionToken: string): Promise<void>;
     updateClinic(id: bigint, newClinicInput: ClinicInput, sessionToken: string): Promise<void>;
     updateFooterContent(content: string, sessionToken: string): Promise<void>;
     updateHeaderImageBase64(imageBase64: string, sessionToken: string): Promise<void>;
     updateHeroBackgroundImage(imageUrl: string, imageBase64: string, sessionToken: string): Promise<void>;
-    updateHeroSettings(newSettings: HeroSettings, sessionToken: string): Promise<void>;
+    updateHeroSettings(newSettings: IdleHeroSettings, sessionToken: string): Promise<void>;
     updateService(id: bigint, newServiceInput: ServiceInput, sessionToken: string): Promise<void>;
     updateServiceIconBase64(serviceId: bigint, imageBase64: string, sessionToken: string): Promise<void>;
     updateSiteTitle(title: string, sessionToken: string): Promise<void>;
     updateSocialLink(id: bigint, newLinkInput: SocialLinkInput, sessionToken: string): Promise<void>;
     upgradePersistentContent(heroBgUrl: string, heroBgBase64: string, siteTitleValue: string, aboutSectionText: string, aboutImgUrl: string, aboutImgBase64: string, headerImgUrl: string, headerImgBase64: string, footerContentText: string, clinicEntries: Array<[bigint, ClinicInput]>, serviceEntries: Array<[bigint, ServiceInput]>, sessionToken: string): Promise<void>;
-    /**
-     * / Validates a session token (public, read-only check).
-     */
     validateSessionToken(sessionToken: string): Promise<void>;
 }

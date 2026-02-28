@@ -1,169 +1,152 @@
-import { useRef, useState } from 'react';
-import { Upload, Trash2, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useState } from 'react';
+import { Upload, Trash2, Link, Loader2 } from 'lucide-react';
 
 interface ImageUploadFieldProps {
-  label: string;
-  currentImageBase64?: string;
   currentImageUrl?: string;
-  onUpload: (base64: string) => Promise<void>;
-  onUpdateUrl: (url: string) => Promise<void>;
-  onDelete: () => Promise<void>;
-  isUploading?: boolean;
-  isDeleting?: boolean;
+  currentImageBase64?: string;
+  onUpload?: (base64: string) => Promise<void>;
+  onUpdateUrl?: (url: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }
 
 export default function ImageUploadField({
-  label,
-  currentImageBase64,
   currentImageUrl,
+  currentImageBase64,
   onUpload,
   onUpdateUrl,
   onDelete,
-  isUploading,
-  isDeleting,
 }: ImageUploadFieldProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [urlInput, setUrlInput] = useState(currentImageUrl || '');
-  const [localError, setLocalError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [savingUrl, setSavingUrl] = useState(false);
+  const [error, setError] = useState('');
 
-  const previewSrc = currentImageBase64
+  const displayUrl = currentImageBase64
     ? `data:image/jpeg;base64,${currentImageBase64}`
-    : currentImageUrl || '';
+    : currentImageUrl || null;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !onUpload) return;
+
     if (file.size > 1.5 * 1024 * 1024) {
-      setLocalError('Image must be under 1.5 MB');
+      setError('File size must be under 1.5MB');
       return;
     }
-    setLocalError('');
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const result = reader.result as string;
-      // Strip the data URL prefix to get pure base64
-      const base64 = result.split(',')[1];
-      try {
+
+    setError('');
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1];
         await onUpload(base64);
-      } catch (err: any) {
-        setLocalError(err?.message || 'Upload failed');
-      }
-    };
-    reader.readAsDataURL(file);
-    // Reset input
-    if (fileInputRef.current) fileInputRef.current.value = '';
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setError('Upload failed');
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleUrlSave = async () => {
-    setLocalError('');
+  const handleSaveUrl = async () => {
+    if (!onUpdateUrl) return;
+    setSavingUrl(true);
     try {
       await onUpdateUrl(urlInput);
-    } catch (err: any) {
-      setLocalError(err?.message || 'Failed to update URL');
+    } catch {
+      setError('Failed to save URL');
+    } finally {
+      setSavingUrl(false);
     }
   };
 
   const handleDelete = async () => {
-    setLocalError('');
+    if (!onDelete) return;
+    setDeleting(true);
     try {
       await onDelete();
       setUrlInput('');
-    } catch (err: any) {
-      setLocalError(err?.message || 'Delete failed');
+    } catch {
+      setError('Delete failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
   return (
-    <div className="space-y-3">
-      <Label className="text-sm font-semibold text-foreground">{label}</Label>
-
+    <div className="space-y-4">
       {/* Preview */}
-      <div className="relative w-full h-40 rounded-xl border-2 border-dashed border-border/60 bg-muted/30 overflow-hidden flex items-center justify-center">
-        {previewSrc ? (
+      {displayUrl && (
+        <div className="relative w-full max-w-xs">
           <img
-            src={previewSrc}
+            src={displayUrl}
             alt="Preview"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <ImageIcon className="w-8 h-8 opacity-40" />
-            <span className="text-xs">No image set</span>
-          </div>
-        )}
-      </div>
-
-      {/* File Upload */}
-      <div className="flex gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="flex-1 gap-2"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || isDeleting}
-        >
-          {isUploading ? (
-            <span className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-          ) : (
-            <Upload className="w-3.5 h-3.5" />
-          )}
-          {isUploading ? 'Uploading...' : 'Upload Image'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-2 text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60"
-          onClick={handleDelete}
-          disabled={isUploading || isDeleting || (!currentImageBase64 && !currentImageUrl)}
-        >
-          {isDeleting ? (
-            <span className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-          ) : (
-            <Trash2 className="w-3.5 h-3.5" />
-          )}
-          {isDeleting ? 'Deleting...' : 'Delete'}
-        </Button>
-      </div>
-
-      {/* URL Input */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            type="url"
-            placeholder="Or paste image URL..."
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            className="pl-8 text-sm"
+            className="w-full h-40 object-cover rounded-lg border border-border"
           />
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleUrlSave}
-          disabled={isUploading || isDeleting}
-        >
-          Set URL
-        </Button>
-      </div>
-
-      {localError && (
-        <p className="text-xs text-destructive">{localError}</p>
       )}
-      <p className="text-xs text-muted-foreground">Max file size: 1.5 MB. Uploaded images take priority over URL.</p>
+
+      {/* Upload */}
+      {onUpload && (
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Upload Image</label>
+          <label className="inline-flex items-center gap-2 px-4 py-2 bg-muted border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/80 cursor-pointer transition-colors">
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploading ? 'Uploading...' : 'Choose File'}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+          <p className="text-xs text-muted-foreground mt-1">Max 1.5MB. JPG, PNG, WebP.</p>
+        </div>
+      )}
+
+      {/* URL Input */}
+      {onUpdateUrl && (
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Or Image URL</label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                className="w-full pl-9 pr-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              />
+            </div>
+            <button
+              onClick={handleSaveUrl}
+              disabled={savingUrl}
+              className="px-4 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+            >
+              {savingUrl ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete */}
+      {onDelete && displayUrl && (
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-destructive border border-destructive/30 rounded-lg hover:bg-destructive/10 transition-colors disabled:opacity-60"
+        >
+          {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          Remove Image
+        </button>
+      )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

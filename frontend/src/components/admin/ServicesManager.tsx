@@ -1,9 +1,6 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Save, X, Layers } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import React, { useState } from 'react';
+import { Plus, Pencil, Trash2, Loader2, X, Check } from 'lucide-react';
+import ImageUploadField from './ImageUploadField';
 import {
   useGetAllContent,
   useAddService,
@@ -12,236 +9,247 @@ import {
   useUpdateServiceIconBase64,
   useDeleteServiceIcon,
 } from '../../hooks/useQueries';
-import type { Service } from '../../backend';
-import ImageUploadField from './ImageUploadField';
 
 interface ServicesManagerProps {
   sessionToken: string;
 }
 
-const emptyForm = { title: '', description: '', iconUrl: '', iconBase64: '' };
+interface ServiceForm {
+  title: string;
+  description: string;
+  iconUrl: string;
+  iconBase64: string;
+}
+
+const emptyForm: ServiceForm = { title: '', description: '', iconUrl: '', iconBase64: '' };
 
 export default function ServicesManager({ sessionToken }: ServicesManagerProps) {
-  const { data: content } = useGetAllContent();
-  const services = content?.services || [];
-
+  const { data: content, isLoading } = useGetAllContent();
   const addService = useAddService();
   const updateService = useUpdateService();
   const deleteService = useDeleteService();
-  const updateServiceIcon = useUpdateServiceIconBase64();
-  const deleteServiceIcon = useDeleteServiceIcon();
+  const updateIcon = useUpdateServiceIconBase64();
+  const deleteIcon = useDeleteServiceIcon();
 
-  const [showForm, setShowForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<bigint | null>(null);
-  const [form, setForm] = useState(emptyForm);
-  const [formError, setFormError] = useState('');
+  const [form, setForm] = useState<ServiceForm>(emptyForm);
+  const [editForm, setEditForm] = useState<ServiceForm>(emptyForm);
 
-  const handleEdit = (id: bigint, service: Service) => {
-    setEditingId(id);
-    setForm({
-      title: service.title,
-      description: service.description,
-      iconUrl: service.iconUrl,
-      iconBase64: service.iconBase64,
-    });
-    setShowForm(true);
-    setFormError('');
-  };
-
-  const handleAdd = () => {
-    setEditingId(null);
+  const handleAdd = async () => {
+    await addService.mutateAsync({ service: form, sessionToken });
     setForm(emptyForm);
-    setShowForm(true);
-    setFormError('');
+    setShowAddForm(false);
   };
 
-  const handleCancel = () => {
-    setShowForm(false);
+  const handleUpdate = async (id: bigint) => {
+    await updateService.mutateAsync({ id, service: editForm, sessionToken });
     setEditingId(null);
-    setForm(emptyForm);
-    setFormError('');
-  };
-
-  const handleSubmit = async () => {
-    if (!form.title.trim()) {
-      setFormError('Title is required');
-      return;
-    }
-    setFormError('');
-    try {
-      if (editingId !== null) {
-        await updateService.mutateAsync({
-          id: editingId,
-          service: {
-            title: form.title,
-            description: form.description,
-            iconUrl: form.iconUrl,
-            iconBase64: form.iconBase64,
-          },
-          sessionToken,
-        });
-      } else {
-        await addService.mutateAsync({
-          service: {
-            title: form.title,
-            description: form.description,
-            iconUrl: form.iconUrl,
-            iconBase64: form.iconBase64,
-          },
-          sessionToken,
-        });
-      }
-      handleCancel();
-    } catch (e: any) {
-      setFormError(e?.message || 'Failed to save service');
-    }
   };
 
   const handleDelete = async (id: bigint) => {
     if (!confirm('Delete this service?')) return;
-    try {
-      await deleteService.mutateAsync({ id, sessionToken });
-    } catch (e: any) {
-      alert(e?.message || 'Failed to delete');
-    }
+    await deleteService.mutateAsync({ id, sessionToken });
   };
 
-  const isPending = addService.isPending || updateService.isPending;
+  const handleUploadIcon = async (id: bigint, base64: string) => {
+    await updateIcon.mutateAsync({ serviceId: id, imageBase64: base64, sessionToken });
+  };
+
+  const handleDeleteIcon = async (id: bigint) => {
+    await deleteIcon.mutateAsync({ serviceId: id, sessionToken });
+  };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Layers className="w-4 h-4 text-amber-400" />
-          Services ({services.length})
+        <div>
+          <h2 className="font-display text-xl font-bold text-foreground mb-1">Services</h2>
+          <p className="text-sm text-muted-foreground">Manage your medical services.</p>
         </div>
-        {!showForm && (
-          <Button size="sm" onClick={handleAdd} className="gap-2 bg-amber-500 hover:bg-amber-600 text-white">
-            <Plus className="w-3.5 h-3.5" />
-            Add Service
-          </Button>
-        )}
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Service
+        </button>
       </div>
 
-      {/* Form */}
-      {showForm && (
-        <div className="border border-amber-500/30 rounded-xl p-4 space-y-4 bg-amber-500/5">
-          <h4 className="font-semibold text-sm text-amber-400">
-            {editingId !== null ? 'Edit Service' : 'New Service'}
-          </h4>
-          <div className="space-y-3">
+      {/* Add Form */}
+      {showAddForm && (
+        <div className="bg-white rounded-xl border border-primary/30 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">New Service</h3>
+            <button onClick={() => setShowAddForm(false)} className="text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Title *</Label>
-              <Input
+              <label className="block text-sm font-medium text-foreground mb-1.5">Title</label>
+              <input
+                type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 placeholder="Service title"
               />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Description</Label>
-              <Textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Service description"
-                rows={3}
-                className="resize-none"
+              <label className="block text-sm font-medium text-foreground mb-1.5">Icon URL (optional)</label>
+              <input
+                type="url"
+                value={form.iconUrl}
+                onChange={(e) => setForm({ ...form, iconUrl: e.target.value })}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="https://..."
               />
             </div>
-            <ImageUploadField
-              label="Service Icon"
-              currentImageBase64={form.iconBase64}
-              currentImageUrl={form.iconUrl}
-              onUpload={async (base64) => {
-                if (editingId !== null) {
-                  await updateServiceIcon.mutateAsync({ serviceId: editingId, imageBase64: base64, sessionToken });
-                }
-                setForm({ ...form, iconBase64: base64 });
-              }}
-              onUpdateUrl={async (url) => {
-                setForm({ ...form, iconUrl: url });
-              }}
-              onDelete={async () => {
-                if (editingId !== null) {
-                  await deleteServiceIcon.mutateAsync({ serviceId: editingId, sessionToken });
-                }
-                setForm({ ...form, iconBase64: '', iconUrl: '' });
-              }}
-              isUploading={updateServiceIcon.isPending}
-              isDeleting={deleteServiceIcon.isPending}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={3}
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
+              placeholder="Service description"
             />
           </div>
-          {formError && <p className="text-xs text-destructive">{formError}</p>}
-          <div className="flex gap-2">
-            <Button
-              onClick={handleSubmit}
-              disabled={isPending}
-              size="sm"
-              className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
             >
-              {isPending ? (
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5" />
-              )}
-              {editingId !== null ? 'Update' : 'Add'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleCancel} className="gap-2">
-              <X className="w-3.5 h-3.5" />
               Cancel
-            </Button>
+            </button>
+            <button
+              onClick={handleAdd}
+              disabled={addService.isPending || !form.title}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+            >
+              {addService.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Add Service
+            </button>
           </div>
         </div>
       )}
 
       {/* Services List */}
-      <div className="space-y-2">
-        {services.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-6">No services yet. Add one above.</p>
-        )}
-        {services.map(([id, service]) => {
-          const iconSrc = service.iconBase64
-            ? `data:image/jpeg;base64,${service.iconBase64}`
-            : service.iconUrl;
-          return (
-            <div
-              key={id.toString()}
-              className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
-            >
-              {iconSrc ? (
-                <img src={iconSrc} alt={service.title} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : content?.services.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No services yet. Add your first service above.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {content?.services.map(([id, service]) => (
+            <div key={id.toString()} className="bg-white rounded-xl border border-border p-5">
+              {editingId === id ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">Title</label>
+                      <input
+                        type="text"
+                        value={editForm.title}
+                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                        className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">Icon URL</label>
+                      <input
+                        type="url"
+                        value={editForm.iconUrl}
+                        onChange={(e) => setEditForm({ ...editForm, iconUrl: e.target.value })}
+                        className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      rows={3}
+                      className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">Service Icon</label>
+                    <ImageUploadField
+                      currentImageBase64={service.iconBase64}
+                      currentImageUrl={service.iconUrl}
+                      onUpload={(base64) => handleUploadIcon(id, base64)}
+                      onDelete={() => handleDeleteIcon(id)}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleUpdate(id)}
+                      disabled={updateService.isPending}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+                    >
+                      {updateService.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      Save
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                  <Layers className="w-5 h-5 text-amber-400" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {(service.iconBase64 || service.iconUrl) && (
+                      <img
+                        src={service.iconBase64 ? `data:image/jpeg;base64,${service.iconBase64}` : service.iconUrl}
+                        alt={service.title}
+                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-foreground">{service.title}</h4>
+                      <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{service.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        setEditingId(id);
+                        setEditForm({
+                          title: service.title,
+                          description: service.description,
+                          iconUrl: service.iconUrl,
+                          iconBase64: service.iconBase64,
+                        });
+                      }}
+                      className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(id)}
+                      disabled={deleteService.isPending}
+                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               )}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-foreground truncate">{service.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{service.description}</p>
-              </div>
-              <div className="flex gap-1 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 h-7 text-muted-foreground hover:text-foreground"
-                  onClick={() => handleEdit(id, service)}
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 h-7 text-muted-foreground hover:text-destructive"
-                  onClick={() => handleDelete(id)}
-                  disabled={deleteService.isPending}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
