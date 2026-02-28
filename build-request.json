@@ -1,0 +1,108 @@
+{
+  "kind": "build_request",
+  "title": "Doctor-Oriented Professional UI with Glass Effects & Dynamic Section Visibility",
+  "projectName": "MedProfile Pro",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Hide any public-facing section (About, Clinics, Services, Social Media) entirely when it has no content. A section is considered empty if it has no items (for list-based sections) or no meaningful text/image (for single-content sections). Empty sections must be invisible to visitors — no placeholder, no skeleton, no empty card grid.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Keep sections empty. Until I add content keep them invisible."
+        ]
+      },
+      "acceptanceCriteria": [
+        "About section is hidden when bio text is empty and no profile image is set.",
+        "Clinics section is hidden when the clinics list is empty.",
+        "Services section is hidden when the services list is empty.",
+        "Social Media section is hidden when the social links list is empty.",
+        "Each section renders normally as soon as at least one piece of content is present.",
+        "No empty state message, skeleton, or placeholder is shown to public visitors."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Redesign the overall public-facing UI and admin interface with a professional, doctor-oriented aesthetic. Apply a clean medical-grade design system: crisp white and deep charcoal tones with a trusted clinical accent (e.g., teal or soft emerald), refined typography using Space Grotesk for headings and Inter for body text, precise spacing, and subtle micro-interactions. The design must convey authority, precision, and trust — appropriate for a medical professional's digital presence.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make the hightech UI more professional doctor oriented. Smart UI."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Color palette reflects a medical/clinical aesthetic (no purely decorative neon overuse).",
+        "Typography hierarchy is clear with Space Grotesk headings and Inter body text.",
+        "All interactive elements have polished hover and focus states.",
+        "Layout feels structured, professional, and appropriate for a doctor's profile site.",
+        "The overall design communicates expertise and trust."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Apply glassmorphism (frosted glass) effects consistently across cards, modals, navigation, and panel surfaces throughout both the public site and the admin dashboard. Glass panels should use semi-transparent backgrounds with backdrop blur, a subtle light border, and a soft inner glow. Ensure legibility of text on all glass surfaces in both light and dark contexts.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Glass effects"
+        ]
+      },
+      "acceptanceCriteria": [
+        "GlassCard component is updated to use backdrop-blur and semi-transparent background.",
+        "Admin sidebar and panel surfaces use consistent glass styling.",
+        "Navigation header uses a frosted glass effect.",
+        "All glass surfaces maintain readable text contrast.",
+        "Glass effects are applied consistently — no mix of opaque and glass cards within the same section."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Redesign the AdminDashboard into a powerful, smart admin interface. The sidebar should be structured with clear section groupings and icons, display active state clearly, and feel like a professional CMS control panel. The content area should use card-based editors with clear visual hierarchy, inline status indicators (saved, unsaved changes), and section health indicators showing which sections are currently empty vs. populated.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Powerful admin interface",
+          "Smart UI"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin sidebar has grouped navigation items with icons for each section.",
+        "Active section is clearly highlighted in the sidebar.",
+        "Each editor section shows a status badge indicating whether the section is empty or has content.",
+        "Editors use glass card containers with clear section titles and action buttons.",
+        "Save/cancel actions have clear visual states (loading, success, error).",
+        "The admin interface feels like a professional medical practice management tool."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "All backend data models and API endpoints must remain unchanged.",
+    "Section visibility logic must be purely frontend — no backend changes required.",
+    "Glass effects must not break accessibility or text contrast standards."
+  ],
+  "nonGoals": [
+    "Adding new backend data fields or endpoints.",
+    "Changing the authentication flow.",
+    "Adding new section types not already present.",
+    "Real-time updates or WebSocket functionality.",
+    "Mobile app or PWA features."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

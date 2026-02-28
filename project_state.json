@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Doctor-oriented professional admin interface with high-tech smart UI, glass effects, and dynamic section visibility (sections hidden until content is added).",
+  "architectural_notes": [
+    "UI theme: high-tech, doctor-oriented, glass morphism effects, professional admin interface",
+    "Sections should be conditionally rendered/visible only when content exists"
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Hide empty sections until content is added",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Professional doctor-oriented smart UI with glass effects and powerful admin interface",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Hide any public-facing section (About, Clinics, Services, Social Media) entirely when it has no content. A section is considered empty if it has no items (for list-based sections) or no meaningful text/image (for single-content sections). Empty sections must be invisible to visitors — no placeholder, no skeleton, no empty card grid.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Redesign the overall public-facing UI and admin interface with a professional, doctor-oriented aesthetic. Apply a clean medical-grade design system: crisp white and deep charcoal tones with a trusted clinical accent (e.g., teal or soft emerald), refined typography using Space Grotesk for headings and Inter for body text, precise spacing, and subtle micro-interactions. The design must convey authority, precision, and trust — appropriate for a medical professional's digital presence.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Apply glassmorphism (frosted glass) effects consistently across cards, modals, navigation, and panel surfaces throughout both the public site and the admin dashboard. Glass panels should use semi-transparent backgrounds with backdrop blur, a subtle light border, and a soft inner glow. Ensure legibility of text on all glass surfaces in both light and dark contexts.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Redesign the AdminDashboard into a powerful, smart admin interface. The sidebar should be structured with clear section groupings and icons, display active state clearly, and feel like a professional CMS control panel. The content area should use card-based editors with clear visual hierarchy, inline status indicators (saved, unsaved changes), and section health indicators showing which sections are currently empty vs. populated.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "MedProfile Pro",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

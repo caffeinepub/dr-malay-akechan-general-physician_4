@@ -1,0 +1,94 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-28T08:03:35.008Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 4,
+    "implemented": 0,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Hide any public-facing section (About, Clinics, Services, Social Media) entirely when it has no content. A section is considered empty if it has no items (for list-based sections) or no meaningful text/image (for single-content sections). Empty sections must be invisible to visitors — no placeholder, no skeleton, no empty card grid.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/pages/MainPage.tsx",
+          "frontend/src/pages/About.tsx",
+          "frontend/src/pages/Clinics.tsx",
+          "frontend/src/pages/Services.tsx",
+          "frontend/src/pages/SocialMedia.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Redesign the overall public-facing UI and admin interface with a professional, doctor-oriented aesthetic. Apply a clean medical-grade design system: crisp white and deep charcoal tones with a trusted clinical accent (e.g., teal or soft emerald), refined typography using Space Grotesk for headings and Inter for body text, precise spacing, and subtle micro-interactions. The design must convey authority, precision, and trust — appropriate for a medical professional's digital presence.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/tailwind.config.js",
+          "frontend/src/index.css",
+          "frontend/src/pages/Home.tsx",
+          "frontend/src/pages/About.tsx",
+          "frontend/src/pages/Clinics.tsx",
+          "frontend/src/pages/Services.tsx",
+          "frontend/src/pages/SocialMedia.tsx",
+          "frontend/src/components/Footer.tsx",
+          "frontend/src/components/Header.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Apply glassmorphism (frosted glass) effects consistently across cards, modals, navigation, and panel surfaces throughout both the public site and the admin dashboard. Glass panels should use semi-transparent backgrounds with backdrop blur, a subtle light border, and a soft inner glow. Ensure legibility of text on all glass surfaces in both light and dark contexts.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/components/GlassCard.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/AdminDashboard.tsx",
+          "frontend/src/components/admin/AboutEditor.tsx",
+          "frontend/src/components/admin/ClinicsManager.tsx",
+          "frontend/src/components/admin/ServicesManager.tsx",
+          "frontend/src/components/admin/SocialLinksManager.tsx",
+          "frontend/src/components/admin/HeaderEditor.tsx",
+          "frontend/src/components/admin/FooterEditor.tsx",
+          "frontend/src/components/admin/HeroSettingsEditor.tsx",
+          "frontend/src/components/admin/ImagesManager.tsx",
+          "frontend/src/components/ClinicCard.tsx",
+          "frontend/src/pages/About.tsx",
+          "frontend/src/pages/Services.tsx",
+          "frontend/src/pages/SocialMedia.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Redesign the AdminDashboard into a powerful, smart admin interface. The sidebar should be structured with clear section groupings and icons, display active state clearly, and feel like a professional CMS control panel. The content area should use card-based editors with clear visual hierarchy, inline status indicators (saved, unsaved changes), and section health indicators showing which sections are currently empty vs. populated.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/components/AdminDashboard.tsx",
+          "frontend/src/components/admin/AboutEditor.tsx",
+          "frontend/src/components/admin/ClinicsManager.tsx",
+          "frontend/src/components/admin/ServicesManager.tsx",
+          "frontend/src/components/admin/SocialLinksManager.tsx",
+          "frontend/src/components/admin/HeaderEditor.tsx",
+          "frontend/src/components/admin/FooterEditor.tsx",
+          "frontend/src/components/admin/HeroSettingsEditor.tsx",
+          "frontend/src/components/admin/ImagesManager.tsx"
+        ],
+        "matchedFiles": []
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-implementation-plan.json",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}
