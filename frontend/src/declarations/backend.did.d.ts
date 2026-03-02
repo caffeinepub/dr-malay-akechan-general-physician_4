@@ -10,6 +10,11 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AboutImage {
+  'imageType' : string,
+  'imageUrl' : string,
+  'imageBase64' : string,
+}
 export interface Clinic {
   'name' : string,
   'description' : string,
@@ -26,24 +31,25 @@ export interface ClinicInput {
   'phone' : string,
   'bookingUrl' : string,
 }
-export interface IdleHeroSettings {
-  'heroHeight' : { 'normal' : null },
-  'glassmorphismIntensity' : number,
-  'backgroundBlur' : boolean,
-  'particlePreset' : string,
-  'particleMaxSize' : number,
-  'particleOpacity' : number,
-  'bgGradientStart' : string,
+export interface GlowEffectSetting {
+  'color' : string,
+  'enabled' : boolean,
+  'style' : string,
+  'intensity' : bigint,
+}
+export interface HeroSettings {
+  'showConnectionLines' : boolean,
+  'backgroundEffect' : string,
+  'footerGlowEffect' : GlowEffectSetting,
   'particleColor' : string,
   'particleCount' : bigint,
-  'mouseParallaxEnabled' : boolean,
-  'animationSpeed' : number,
+  'heroGradientStart' : string,
   'particleSpeed' : number,
-  'particleMinSize' : number,
-  'overlayOpacity' : number,
-  '_version' : bigint,
-  'bgGradientEnd' : string,
-  'textColor' : string,
+  'heroGradientEnd' : string,
+  'mouseInteraction' : boolean,
+  'heroGlowEffect' : GlowEffectSetting,
+  'particleSize' : number,
+  'glassmorphismEnabled' : boolean,
 }
 export interface Images {
   'heroBackgroundUrl' : string,
@@ -63,6 +69,7 @@ export interface ServiceInput {
 }
 export interface SocialLink { 'url' : string, 'platform' : string }
 export interface SocialLinkInput { 'url' : string, 'platform' : string }
+export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -105,20 +112,18 @@ export interface _SERVICE {
   'deleteService' : ActorMethod<[bigint, string], undefined>,
   'deleteServiceIcon' : ActorMethod<[bigint, string], undefined>,
   'deleteSocialLink' : ActorMethod<[bigint, string], undefined>,
-  'getAboutImageBase64' : ActorMethod<[], string>,
-  'getAboutSection' : ActorMethod<[], [string, string]>,
+  'getAboutSection' : ActorMethod<[], [string, AboutImage]>,
   'getAllClinics' : ActorMethod<[], Array<[bigint, Clinic]>>,
   'getAllContent' : ActorMethod<
     [],
     {
       'clinics' : Array<[bigint, Clinic]>,
       'headerImageUrl' : string,
-      'heroSettings' : IdleHeroSettings,
+      'heroSettings' : HeroSettings,
       'siteTitle' : string,
-      'aboutImageBase64' : string,
+      'aboutImage' : AboutImage,
       'aboutSection' : string,
       'socialLinks' : Array<[bigint, SocialLink]>,
-      'aboutImageUrl' : string,
       'headerImageBase64' : string,
       'services' : Array<[bigint, Service]>,
       'footerContent' : string,
@@ -127,20 +132,23 @@ export interface _SERVICE {
   >,
   'getAllServices' : ActorMethod<[], Array<[bigint, Service]>>,
   'getAllSocialLinks' : ActorMethod<[], Array<[bigint, SocialLink]>>,
-  'getCallerUserProfile' : ActorMethod<[], [] | [{ 'name' : string }]>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getFooterContent' : ActorMethod<[], string>,
   'getHeaderImageBase64' : ActorMethod<[], string>,
-  'getHeroSettings' : ActorMethod<[], IdleHeroSettings>,
+  'getHeroSettings' : ActorMethod<[], HeroSettings>,
   'getImages' : ActorMethod<[], Images>,
   'getServiceIconBase64' : ActorMethod<[bigint], string>,
   'getSiteTitle' : ActorMethod<[], string>,
-  'getUserProfile' : ActorMethod<[Principal], [] | [{ 'name' : string }]>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  /**
+   * / Login with username/password; returns a session token on success.
+   */
   'login' : ActorMethod<[string, string], string>,
-  'saveCallerUserProfile' : ActorMethod<[{ 'name' : string }], undefined>,
-  'updateAboutImageBase64' : ActorMethod<[string, string], undefined>,
-  'updateAboutSection' : ActorMethod<[string, string, string], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'updateAboutImage' : ActorMethod<[AboutImage, string], undefined>,
+  'updateAboutSection' : ActorMethod<[string, string], undefined>,
   'updateClinic' : ActorMethod<[bigint, ClinicInput, string], undefined>,
   'updateFooterContent' : ActorMethod<[string, string], undefined>,
   'updateHeaderImageBase64' : ActorMethod<[string, string], undefined>,
@@ -148,7 +156,7 @@ export interface _SERVICE {
     [string, string, string],
     undefined
   >,
-  'updateHeroSettings' : ActorMethod<[IdleHeroSettings, string], undefined>,
+  'updateHeroSettings' : ActorMethod<[HeroSettings, string], undefined>,
   'updateService' : ActorMethod<[bigint, ServiceInput, string], undefined>,
   'updateServiceIconBase64' : ActorMethod<[bigint, string, string], undefined>,
   'updateSiteTitle' : ActorMethod<[string, string], undefined>,
@@ -173,6 +181,9 @@ export interface _SERVICE {
     ],
     undefined
   >,
+  /**
+   * / Validates a session token (public, read-only check).
+   */
   'validateSessionToken' : ActorMethod<[string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

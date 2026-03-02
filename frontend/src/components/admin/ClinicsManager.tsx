@@ -1,83 +1,178 @@
-import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, X, Check } from 'lucide-react';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useActor } from '../../hooks/useActor';
+import { toast } from 'sonner';
+import type { ClinicInput } from '../../backend';
+import { Plus, Pencil, Trash2, Save, X, Building2, MapPin, Phone, Globe, Calendar } from 'lucide-react';
 import {
-  useGetAllContent,
-  useAddClinic,
-  useUpdateClinic,
-  useDeleteClinic,
-} from '../../hooks/useQueries';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface ClinicsManagerProps {
   sessionToken: string;
 }
 
-interface ClinicForm {
-  name: string;
-  description: string;
-  address: string;
-  phone: string;
-  mapUrl: string;
-  bookingUrl: string;
-}
-
-const emptyForm: ClinicForm = { name: '', description: '', address: '', phone: '', mapUrl: '', bookingUrl: '' };
+const emptyClinic: ClinicInput = {
+  name: '',
+  address: '',
+  phone: '',
+  description: '',
+  mapUrl: '',
+  bookingUrl: '',
+};
 
 export default function ClinicsManager({ sessionToken }: ClinicsManagerProps) {
-  const { data: content, isLoading } = useGetAllContent();
-  const addClinic = useAddClinic();
-  const updateClinic = useUpdateClinic();
-  const deleteClinic = useDeleteClinic();
+  const { actor, isFetching } = useActor();
+  const queryClient = useQueryClient();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<bigint | null>(null);
-  const [form, setForm] = useState<ClinicForm>(emptyForm);
-  const [editForm, setEditForm] = useState<ClinicForm>(emptyForm);
+  const [newClinic, setNewClinic] = useState<ClinicInput>(emptyClinic);
+  const [editClinic, setEditClinic] = useState<ClinicInput>(emptyClinic);
 
-  const handleAdd = async () => {
-    await addClinic.mutateAsync({ clinic: form, sessionToken });
-    setForm(emptyForm);
-    setShowAddForm(false);
-  };
+  const { data: clinics = [], isLoading } = useQuery({
+    queryKey: ['clinics'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllClinics();
+    },
+    enabled: !!actor && !isFetching,
+  });
 
-  const handleUpdate = async (id: bigint) => {
-    await updateClinic.mutateAsync({ id, clinic: editForm, sessionToken });
-    setEditingId(null);
-  };
+  const addMutation = useMutation({
+    mutationFn: async (clinic: ClinicInput) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.addClinic(clinic, sessionToken);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['allContent'] });
+      setNewClinic(emptyClinic);
+      setShowAddForm(false);
+      toast.success('Clinic added successfully');
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to add clinic: ${err?.message ?? 'Unknown error'}`);
+    },
+  });
 
-  const handleDelete = async (id: bigint) => {
-    if (!confirm('Delete this clinic?')) return;
-    await deleteClinic.mutateAsync({ id, sessionToken });
-  };
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, clinic }: { id: bigint; clinic: ClinicInput }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.updateClinic(id, clinic, sessionToken);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['allContent'] });
+      setEditingId(null);
+      toast.success('Clinic updated successfully');
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to update clinic: ${err?.message ?? 'Unknown error'}`);
+    },
+  });
 
-  const ClinicFormFields = ({ data, onChange }: { data: ClinicForm; onChange: (d: ClinicForm) => void }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {[
-        { key: 'name', label: 'Clinic Name', type: 'text', placeholder: 'Main Clinic' },
-        { key: 'phone', label: 'Phone', type: 'tel', placeholder: '+1 234 567 8900' },
-        { key: 'address', label: 'Address', type: 'text', placeholder: '123 Medical St' },
-        { key: 'mapUrl', label: 'Map URL', type: 'url', placeholder: 'https://maps.google.com/...' },
-        { key: 'bookingUrl', label: 'Booking URL', type: 'url', placeholder: 'https://booking.example.com' },
-      ].map(({ key, label, type, placeholder }) => (
-        <div key={key}>
-          <label className="block text-sm font-medium text-foreground mb-1.5">{label}</label>
-          <input
-            type={type}
-            value={data[key as keyof ClinicForm]}
-            onChange={(e) => onChange({ ...data, [key]: e.target.value })}
-            className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            placeholder={placeholder}
+  const deleteMutation = useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.deleteClinic(id, sessionToken);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['allContent'] });
+      toast.success('Clinic deleted');
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to delete clinic: ${err?.message ?? 'Unknown error'}`);
+    },
+  });
+
+  const ClinicForm = ({
+    value,
+    onChange,
+    onSave,
+    onCancel,
+    isSaving,
+    title,
+  }: {
+    value: ClinicInput;
+    onChange: (v: ClinicInput) => void;
+    onSave: () => void;
+    onCancel: () => void;
+    isSaving: boolean;
+    title: string;
+  }) => (
+    <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5 space-y-4">
+      <h4 className="font-semibold text-foreground text-sm">{title}</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {[
+          { key: 'name',        label: 'Clinic Name',   placeholder: 'e.g. Main Street Clinic', icon: <Building2 size={14} /> },
+          { key: 'phone',       label: 'Phone Number',  placeholder: 'e.g. +1 (555) 000-0000',  icon: <Phone size={14} /> },
+          { key: 'mapUrl',      label: 'Map URL',       placeholder: 'Google Maps link',         icon: <Globe size={14} /> },
+          { key: 'bookingUrl',  label: 'Booking URL',   placeholder: 'Appointment booking link', icon: <Calendar size={14} /> },
+        ].map(({ key, label, placeholder, icon }) => (
+          <div key={key} className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground/80">{label}</label>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground shrink-0">{icon}</span>
+              <input
+                type="text"
+                value={(value as any)[key]}
+                onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+                placeholder={placeholder}
+                className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-sm"
+              />
+            </div>
+          </div>
+        ))}
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-xs font-medium text-foreground/80">Address</label>
+          <div className="flex items-center gap-2">
+            <MapPin size={14} className="text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              value={value.address}
+              onChange={(e) => onChange({ ...value, address: e.target.value })}
+              placeholder="Full address"
+              className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-sm"
+            />
+          </div>
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-xs font-medium text-foreground/80">Description</label>
+          <textarea
+            value={value.description}
+            onChange={(e) => onChange({ ...value, description: e.target.value })}
+            placeholder="Brief description"
+            rows={3}
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-sm resize-none"
           />
         </div>
-      ))}
-      <div className="sm:col-span-2">
-        <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
-        <textarea
-          value={data.description}
-          onChange={(e) => onChange({ ...data, description: e.target.value })}
-          rows={3}
-          className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
-          placeholder="Clinic description"
-        />
+      </div>
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          onClick={onSave}
+          disabled={isSaving || !value.name.trim()}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-medium text-sm transition-colors disabled:opacity-50"
+        >
+          {isSaving
+            ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Saving...</>
+            : <><Save size={14} />Save Clinic</>}
+        </button>
+        <button
+          onClick={onCancel}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium text-sm transition-colors"
+        >
+          <X size={14} />Cancel
+        </button>
       </div>
     </div>
   );
@@ -86,111 +181,114 @@ export default function ClinicsManager({ sessionToken }: ClinicsManagerProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-xl font-bold text-foreground mb-1">Clinics</h2>
-          <p className="text-sm text-muted-foreground">Manage your clinic locations.</p>
+          <h2 className="text-2xl font-heading font-bold text-foreground mb-1">Clinics</h2>
+          <p className="text-muted-foreground text-sm">Manage clinic locations and contact information.</p>
         </div>
         <button
-          onClick={() => setShowAddForm(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+          onClick={() => { setShowAddForm(true); setEditingId(null); }}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-medium text-sm transition-colors"
         >
-          <Plus className="w-4 h-4" />
-          Add Clinic
+          <Plus size={16} />Add Clinic
         </button>
       </div>
 
-      {/* Add Form */}
       {showAddForm && (
-        <div className="bg-white rounded-xl border border-primary/30 p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">New Clinic</h3>
-            <button onClick={() => setShowAddForm(false)} className="text-muted-foreground hover:text-foreground">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <ClinicFormFields data={form} onChange={setForm} />
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setShowAddForm(false)}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAdd}
-              disabled={addClinic.isPending || !form.name}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
-            >
-              {addClinic.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              Add Clinic
-            </button>
-          </div>
-        </div>
+        <ClinicForm
+          value={newClinic}
+          onChange={setNewClinic}
+          onSave={() => addMutation.mutate(newClinic)}
+          onCancel={() => { setShowAddForm(false); setNewClinic(emptyClinic); }}
+          isSaving={addMutation.isPending}
+          title="Add New Clinic"
+        />
       )}
 
-      {/* Clinics List */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <div className="space-y-3">
+          {[1, 2].map(i => (
+            <div key={i} className="h-24 rounded-xl border border-border bg-card animate-pulse" />
+          ))}
         </div>
-      ) : content?.clinics.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>No clinics yet. Add your first clinic above.</p>
+      ) : clinics.length === 0 ? (
+        <div className="text-center py-16 rounded-xl border border-dashed border-border">
+          <Building2 size={40} className="mx-auto text-muted-foreground/30 mb-3" />
+          <p className="text-muted-foreground text-sm">No clinics added yet.</p>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="mt-3 text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+          >
+            Add your first clinic →
+          </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {content?.clinics.map(([id, clinic]) => (
-            <div key={id.toString()} className="bg-white rounded-xl border border-border p-5">
+        <div className="space-y-3">
+          {clinics.map(([id, clinic]) => (
+            <div key={id.toString()}>
               {editingId === id ? (
-                <div className="space-y-4">
-                  <ClinicFormFields data={editForm} onChange={setEditForm} />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => handleUpdate(id)}
-                      disabled={updateClinic.isPending}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
-                    >
-                      {updateClinic.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                      Save
-                    </button>
-                  </div>
-                </div>
+                <ClinicForm
+                  value={editClinic}
+                  onChange={setEditClinic}
+                  onSave={() => updateMutation.mutate({ id, clinic: editClinic })}
+                  onCancel={() => setEditingId(null)}
+                  isSaving={updateMutation.isPending}
+                  title="Edit Clinic"
+                />
               ) : (
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <h4 className="font-semibold text-foreground">{clinic.name}</h4>
-                    <p className="text-sm text-muted-foreground mt-0.5">{clinic.address}</p>
-                    {clinic.phone && <p className="text-sm text-muted-foreground">{clinic.phone}</p>}
+                <div className="rounded-xl border border-border bg-card p-5 flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Building2 size={15} className="text-cyan-400 shrink-0" />
+                      <h4 className="font-semibold text-foreground text-sm truncate">{clinic.name}</h4>
+                    </div>
+                    {clinic.address && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                        <MapPin size={11} className="shrink-0" />{clinic.address}
+                      </p>
+                    )}
+                    {clinic.phone && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                        <Phone size={11} className="shrink-0" />{clinic.phone}
+                      </p>
+                    )}
+                    {clinic.description && (
+                      <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{clinic.description}</p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => {
-                        setEditingId(id);
-                        setEditForm({
-                          name: clinic.name,
-                          description: clinic.description,
-                          address: clinic.address,
-                          phone: clinic.phone,
-                          mapUrl: clinic.mapUrl,
-                          bookingUrl: clinic.bookingUrl,
-                        });
-                      }}
-                      className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      onClick={() => { setEditingId(id); setEditClinic({ ...clinic }); setShowAddForm(false); }}
+                      className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                      title="Edit"
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil size={14} />
                     </button>
-                    <button
-                      onClick={() => handleDelete(id)}
-                      disabled={deleteClinic.isPending}
-                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          className="p-2 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Clinic?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete <strong>{clinic.name}</strong>? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMutation.mutate(id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               )}

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Stethoscope, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, ArrowLeft, Loader2 } from 'lucide-react';
 
 interface AdminLoginProps {
   onLogin: (username: string, password: string) => Promise<void>;
-  error?: string;
+  error?: string | null;
   isLoading?: boolean;
 }
 
@@ -15,90 +15,168 @@ export default function AdminLogin({ onLogin, error, isLoading }: AdminLoginProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onLogin(username, password);
+    if (!username.trim() || !password.trim() || isLoading) return;
+    await onLogin(username.trim(), password.trim());
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Back link */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Homepage
-        </Link>
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: 'oklch(0.08 0.018 240)' }}
+    >
+      {/* Background glow */}
+      <div
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, oklch(0.72 0.18 195 / 0.08) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+        }}
+      />
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl border border-border shadow-card p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-full mb-4">
-              <Stethoscope className="w-7 h-7 text-primary" />
-            </div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Admin Login</h1>
-            <p className="text-sm text-muted-foreground mt-1">Sign in to manage your profile</p>
+      <div
+        className="relative w-full max-w-md rounded-2xl p-8"
+        style={{
+          background: 'oklch(0.12 0.022 240)',
+          border: '1px solid oklch(0.72 0.18 195 / 0.20)',
+          boxShadow: '0 24px 64px oklch(0.08 0.018 240 / 0.80)',
+        }}
+      >
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{
+              background: 'oklch(0.72 0.18 195 / 0.12)',
+              border: '1px solid oklch(0.72 0.18 195 / 0.30)',
+            }}
+          >
+            <Lock className="w-6 h-6" style={{ color: 'oklch(0.72 0.18 195)' }} />
           </div>
+          <h1
+            className="font-heading font-bold text-2xl mb-1"
+            style={{ color: 'oklch(0.96 0.012 220)' }}
+          >
+            Admin Login
+          </h1>
+          <p className="text-sm" style={{ color: 'oklch(0.68 0.012 230)' }}>
+            Sign in to manage your site
+          </p>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-foreground mb-1.5">
-                Username
-              </label>
+        {/* Error message */}
+        {error && (
+          <div
+            className="mb-6 px-4 py-3 rounded-xl text-sm font-medium"
+            style={{
+              background: 'oklch(0.55 0.22 25 / 0.15)',
+              border: '1px solid oklch(0.55 0.22 25 / 0.40)',
+              color: 'oklch(0.80 0.15 25)',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Username */}
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-semibold mb-2"
+              style={{ color: 'oklch(0.82 0.010 220)' }}
+            >
+              Username
+            </label>
+            <div className="relative">
+              <User
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                style={{ color: 'oklch(0.55 0.015 230)' }}
+              />
               <input
                 id="username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoComplete="username"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors bg-white"
+                onChange={e => setUsername(e.target.value)}
                 placeholder="Enter username"
+                autoComplete="username"
+                disabled={isLoading}
+                className="admin-input pl-10"
               />
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  className="w-full px-3.5 py-2.5 pr-10 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors bg-white"
-                  placeholder="Enter password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg px-4 py-3">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          {/* Password */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-semibold mb-2"
+              style={{ color: 'oklch(0.82 0.010 220)' }}
             >
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
+              Password
+            </label>
+            <div className="relative">
+              <Lock
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                style={{ color: 'oklch(0.55 0.015 230)' }}
+              />
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Enter password"
+                autoComplete="current-password"
+                disabled={isLoading}
+                className="admin-input pl-10 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: 'oklch(0.55 0.015 230)' }}
+                tabIndex={-1}
+              >
+                {showPassword
+                  ? <EyeOff className="w-4 h-4" />
+                  : <Eye className="w-4 h-4" />
+                }
+              </button>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isLoading || !username.trim() || !password.trim()}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: 'linear-gradient(135deg, oklch(0.65 0.185 195), oklch(0.58 0.175 240))',
+              color: 'oklch(0.98 0.005 220)',
+              boxShadow: '0 4px 16px oklch(0.65 0.185 195 / 0.30)',
+            }}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Signing in…
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+        </form>
+
+        {/* Back link */}
+        <div className="mt-6 text-center">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-sm transition-colors duration-200"
+            style={{ color: 'oklch(0.65 0.012 230)' }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Return to Homepage
+          </Link>
         </div>
       </div>
     </div>

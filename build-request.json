@@ -1,101 +1,62 @@
 {
   "kind": "build_request",
-  "title": "Advanced Footer, Roboto Headings, Hero Theme Settings & Particle Effects",
-  "projectName": "Doctor Portfolio",
+  "title": "Mobile Responsiveness Fixes & Admin Login Button Label Update",
+  "projectName": "MedSite Admin",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Redesign the Footer component to be advanced, structured, and visually consistent with the rest of the UI (warm neutral tones, teal accents, card-based aesthetic). The footer should include multiple columns: a branding/bio column, a quick navigation links column, a contact/clinic info column, and a social media links column. Add a bottom bar with copyright text and a divider. Match typography, color tokens, and spacing conventions used in Header and section components.",
+      "text": "Make the entire public-facing site fully responsive on mobile devices. Audit and fix all layout, spacing, typography, and component issues across: Header (navigation, anchor links, admin panel link), Home/Hero section (particle canvas, hero image, site title), About section (two-column layout should stack vertically on mobile), Services grid, Clinics grid, SocialMedia section, and Footer. Ensure touch targets are adequately sized, text does not overflow, images scale correctly, and grid/flex layouts collapse gracefully at small screen widths (sm breakpoint and below).",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-4"
         ],
         "quotes": [
-          "Make the footer consistent with rest of the UI. Make the footer advanced and structured."
+          "The UI is not rendering properly on mobile, make it fully responsive."
         ]
       },
       "acceptanceCriteria": [
-        "Footer renders a multi-column layout (branding, navigation, contact, social)",
-        "Footer uses the same color palette, spacing, and border/shadow styles as the rest of the UI",
-        "A bottom bar with copyright text and a horizontal divider is present",
-        "Social media icons are displayed and link correctly",
-        "Footer is fully responsive (stacks columns on mobile)"
+        "All public pages render correctly on 375px wide viewport (mobile)",
+        "No horizontal overflow or clipped content on mobile",
+        "Two-column About section layout stacks to single column on mobile",
+        "Services and Clinics grids collapse to 1 column on mobile",
+        "Header navigation is accessible and usable on mobile",
+        "Footer renders correctly without overflow on mobile",
+        "Touch targets (buttons, links) are at least 44px in height/width on mobile"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Import the Roboto font from Google Fonts (in index.html and/or index.css) and apply it as the primary font for all headings (h1–h6) and section titles across the entire application, including the Header, Hero section, About, Services, Clinics, SocialMedia pages, and Footer. Update the Tailwind config fontFamily to reference Roboto for the heading/display font stack.",
+      "text": "In the AdminPanel page and Header component, change the admin login button label from 'Admin' to 'Login'. The button's behavior, styling, and all authentication/session logic must remain exactly the same — only the visible text label changes.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-4"
         ],
         "quotes": [
-          "Use premium font like ROBOTO for all headings."
+          "The admin login button should say \"Login\" not \"Admin\"",
+          "Keeo the login preferences same."
         ]
       },
       "acceptanceCriteria": [
-        "Roboto font is loaded from Google Fonts",
-        "All h1–h6 elements and explicit heading/title classes use Roboto",
-        "Tailwind config reflects Roboto in the font family configuration",
-        "No heading in the app falls back to a non-Roboto font when Roboto is available"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Expand the HeroSettingsEditor admin component into a powerful, comprehensive hero theme settings panel. It should include: gradient start and end color pickers, overlay opacity slider, text color selector, background blur toggle, glassmorphism intensity slider, hero height selector (options: compact/normal/full-screen), animation speed control, enable/disable mouse parallax toggle, and a live preview thumbnail of the combined settings. Persist all new fields via the updateHeroSettings backend mutation and ensure the Home/Hero page reads and applies all settings.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Add powerful hero theme settings in admin section"
-        ]
-      },
-      "acceptanceCriteria": [
-        "HeroSettingsEditor displays all new controls: gradient pickers, overlay opacity, text color, blur toggle, glassmorphism slider, height selector, animation speed, mouse parallax toggle",
-        "A live preview thumbnail reflects the current settings combination",
-        "All settings are persisted to the backend and reloaded on page load",
-        "The Hero section on the public page correctly applies all saved theme settings",
-        "Controls are grouped logically with clear labels and sections"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Implement an advanced particle effect selection system in the HeroSettingsEditor admin panel. Provide a gallery/grid of named particle presets the admin can choose from, including at minimum: None, Floating Dots, Stars, Snow, Bubbles, Geometric Shapes, DNA Helix, Medical Pulse, Confetti, and Fireflies. Each preset should display a small animated preview thumbnail. Additionally, expose fine-tuning controls for the selected preset: particle count slider, particle size range, particle speed slider, particle color picker, and particle opacity slider. Implement the actual particle animations in the ParticleCanvas component on the hero section using canvas-based or CSS animation rendering.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "add advanced particle effect selecion abilities"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admin particle settings panel shows a grid of at least 10 named presets with animated preview thumbnails",
-        "Selected preset name is saved to hero settings in the backend",
-        "Fine-tuning controls (count, size, speed, color, opacity) are present and functional",
-        "ParticleCanvas component renders the selected particle preset with fine-tuned parameters on the Hero section",
-        "Changing preset in admin updates the live hero section after save",
-        "'None' preset disables all particles cleanly"
+        "The admin panel access button displays 'Login' as its label",
+        "Clicking the button still navigates to the admin panel / triggers the login flow as before",
+        "No changes to authentication logic, session storage, or login form behavior",
+        "Button styling remains unchanged"
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
-    "All Motoko logic must remain in the single backend/main.mo actor file",
-    "Roboto must be loaded from Google Fonts, not bundled locally",
-    "Particle effects must be implemented client-side only (canvas or CSS); no backend computation for animations"
+    "Do not modify any authentication or session management logic",
+    "Do not alter login preferences, credential handling, or admin access control",
+    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui"
   ],
   "nonGoals": [
-    "Changing the overall site structure or navigation beyond footer updates",
-    "Adding new backend data models unrelated to hero settings or footer content",
-    "Implementing real-time preview sync between admin and public page",
-    "Adding new page routes or sections not already present"
+    "Changing desktop layout or design",
+    "Adding new features to the admin panel",
+    "Modifying backend logic",
+    "Changing the admin login form fields or authentication flow"
   ],
   "imageRequirements": {
     "required": [],

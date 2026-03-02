@@ -1,384 +1,397 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Loader2, Save } from 'lucide-react';
 import { useGetHeroSettings, useUpdateHeroSettings } from '../../hooks/useQueries';
-import { IdleHeroSettings, Variant_normal } from '../../backend';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Check, Palette, Layers, Type, Sparkles, MousePointer, Zap } from 'lucide-react';
 
-interface Props {
+interface HeroSettingsEditorProps {
   sessionToken: string;
 }
 
-const PARTICLE_PRESETS = [
-  { name: 'None', emoji: '⬜', desc: 'No particles' },
-  { name: 'Floating Dots', emoji: '🔵', desc: 'Drifting circles' },
-  { name: 'Stars', emoji: '⭐', desc: 'Twinkling stars' },
-  { name: 'Snow', emoji: '❄️', desc: 'Falling snowflakes' },
-  { name: 'Bubbles', emoji: '🫧', desc: 'Rising bubbles' },
-  { name: 'Geometric Shapes', emoji: '🔷', desc: 'Rotating shapes' },
-  { name: 'DNA Helix', emoji: '🧬', desc: 'Double helix' },
-  { name: 'Medical Pulse', emoji: '➕', desc: 'Pulsing crosses' },
-  { name: 'Confetti', emoji: '🎊', desc: 'Falling confetti' },
-  { name: 'Fireflies', emoji: '✨', desc: 'Glowing fireflies' },
-  { name: 'Network', emoji: '🕸️', desc: 'Connected nodes' },
-];
-
-const DEFAULT_SETTINGS: IdleHeroSettings = {
-  _version: BigInt(1),
-  bgGradientStart: '#0a0f1e',
-  bgGradientEnd: '#0d1f3c',
-  overlayOpacity: 0.95,
-  textColor: '#ffffff',
-  backgroundBlur: true,
-  glassmorphismIntensity: 0.7,
-  heroHeight: Variant_normal.normal,
-  animationSpeed: 1.0,
-  mouseParallaxEnabled: true,
-  particlePreset: 'Floating Dots',
-  particleCount: BigInt(120),
-  particleMinSize: 0.15,
-  particleMaxSize: 2.8,
-  particleSpeed: 1.2,
-  particleColor: '#38F9D7',
-  particleOpacity: 0.85,
+const DEFAULT_GLOW = {
+  enabled: true,
+  intensity: 5,
+  color: '#0ea5e9',
+  style: 'soft',
 };
 
-function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/10">
-      <span className="text-cyan-400">{icon}</span>
-      <h3 className="text-sm font-semibold font-heading text-white/90 uppercase tracking-wider">{title}</h3>
-    </div>
-  );
-}
+const DEFAULT_FOOTER_GLOW = {
+  enabled: false,
+  intensity: 3,
+  color: '#FF6399',
+  style: 'shimmer',
+};
 
-function ControlRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-1.5">
-      <Label className="text-xs text-white/60 min-w-[130px]">{label}</Label>
-      <div className="flex-1">{children}</div>
-    </div>
-  );
-}
-
-export default function HeroSettingsEditor({ sessionToken }: Props) {
+export default function HeroSettingsEditor({ sessionToken }: HeroSettingsEditorProps) {
   const { data: heroSettings, isLoading } = useGetHeroSettings();
-  const updateMutation = useUpdateHeroSettings();
+  const updateHeroSettings = useUpdateHeroSettings();
 
-  const [form, setForm] = useState<IdleHeroSettings>(DEFAULT_SETTINGS);
-  const [saved, setSaved] = useState(false);
+  const [localSettings, setLocalSettings] = useState({
+    particleCount: 70,
+    particleSpeed: 1.5,
+    particleSize: 2.5,
+    particleColor: '#90EE90',
+    showConnectionLines: true,
+    mouseInteraction: true,
+    backgroundEffect: 'gradient',
+    glassmorphismEnabled: true,
+    heroGradientStart: '#40A1FF',
+    heroGradientEnd: '#A993FF',
+  });
+
+  const [heroGlow, setHeroGlow] = useState(DEFAULT_GLOW);
+  const [footerGlow, setFooterGlow] = useState(DEFAULT_FOOTER_GLOW);
 
   useEffect(() => {
     if (heroSettings) {
-      setForm(heroSettings);
+      setLocalSettings({
+        particleCount: Number(heroSettings.particleCount),
+        particleSpeed: heroSettings.particleSpeed,
+        particleSize: heroSettings.particleSize,
+        particleColor: heroSettings.particleColor,
+        showConnectionLines: heroSettings.showConnectionLines,
+        mouseInteraction: heroSettings.mouseInteraction,
+        backgroundEffect: heroSettings.backgroundEffect,
+        glassmorphismEnabled: heroSettings.glassmorphismEnabled,
+        heroGradientStart: heroSettings.heroGradientStart,
+        heroGradientEnd: heroSettings.heroGradientEnd,
+      });
+      if (heroSettings.heroGlowEffect) {
+        setHeroGlow({
+          enabled: heroSettings.heroGlowEffect.enabled,
+          intensity: Number(heroSettings.heroGlowEffect.intensity),
+          color: heroSettings.heroGlowEffect.color,
+          style: heroSettings.heroGlowEffect.style,
+        });
+      }
+      if (heroSettings.footerGlowEffect) {
+        setFooterGlow({
+          enabled: heroSettings.footerGlowEffect.enabled,
+          intensity: Number(heroSettings.footerGlowEffect.intensity),
+          color: heroSettings.footerGlowEffect.color,
+          style: heroSettings.footerGlowEffect.style,
+        });
+      }
     }
   }, [heroSettings]);
 
-  const set = <K extends keyof IdleHeroSettings>(key: K, value: IdleHeroSettings[K]) => {
-    setForm(prev => ({ ...prev, [key]: value }));
-  };
-
   const handleSave = async () => {
-    try {
-      await updateMutation.mutateAsync({ settings: form, sessionToken });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
-      console.error(e);
-    }
+    await updateHeroSettings.mutateAsync({
+      settings: {
+        particleCount: BigInt(localSettings.particleCount),
+        particleSpeed: localSettings.particleSpeed,
+        particleSize: localSettings.particleSize,
+        particleColor: localSettings.particleColor,
+        showConnectionLines: localSettings.showConnectionLines,
+        mouseInteraction: localSettings.mouseInteraction,
+        backgroundEffect: localSettings.backgroundEffect,
+        glassmorphismEnabled: localSettings.glassmorphismEnabled,
+        heroGradientStart: localSettings.heroGradientStart,
+        heroGradientEnd: localSettings.heroGradientEnd,
+        heroGlowEffect: {
+          enabled: heroGlow.enabled,
+          intensity: BigInt(heroGlow.intensity),
+          color: heroGlow.color,
+          style: heroGlow.style,
+        },
+        footerGlowEffect: {
+          enabled: footerGlow.enabled,
+          intensity: BigInt(footerGlow.intensity),
+          color: footerGlow.color,
+          style: footerGlow.style,
+        },
+      },
+      sessionToken,
+    });
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-40">
-        <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
 
-  // Live preview styles
-  const previewStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${form.bgGradientStart}, ${form.bgGradientEnd})`,
-    position: 'relative',
-    overflow: 'hidden',
-  };
-
-  const overlayStyle: React.CSSProperties = {
-    position: 'absolute',
-    inset: 0,
-    background: `rgba(0,0,0,${form.overlayOpacity * 0.5})`,
-    backdropFilter: form.backgroundBlur ? 'blur(2px)' : 'none',
-  };
-
-  const glassStyle: React.CSSProperties = {
-    position: 'absolute',
-    inset: 0,
-    background: `rgba(255,255,255,${form.glassmorphismIntensity * 0.05})`,
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Live Preview */}
+    <div className="space-y-6 max-w-2xl">
       <div>
-        <SectionHeader icon={<Palette className="w-4 h-4" />} title="Live Preview" />
-        <div
-          className="w-full h-28 rounded-xl border border-white/10 overflow-hidden relative"
-          style={previewStyle}
-        >
-          <div style={overlayStyle} />
-          <div style={glassStyle} />
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 gap-1">
-            <div
-              className="text-sm font-bold font-heading"
-              style={{ color: form.textColor }}
-            >
-              Hero Preview
-            </div>
-            <div className="text-xs opacity-60" style={{ color: form.textColor }}>
-              {form.particlePreset} · {form.heroHeight}
+        <h2 className="font-display text-xl font-bold text-foreground mb-1">Hero Settings</h2>
+        <p className="text-sm text-muted-foreground">Configure hero section appearance settings.</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-border p-6 space-y-5">
+        {/* Gradient Colors */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Gradient Start Color
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={localSettings.heroGradientStart}
+                onChange={(e) => setLocalSettings({ ...localSettings, heroGradientStart: e.target.value })}
+                className="w-10 h-10 rounded border border-border cursor-pointer"
+              />
+              <input
+                type="text"
+                value={localSettings.heroGradientStart}
+                onChange={(e) => setLocalSettings({ ...localSettings, heroGradientStart: e.target.value })}
+                className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
             </div>
           </div>
-          {/* Particle dots preview */}
-          {form.particlePreset !== 'None' && (
-            <div className="absolute inset-0 z-5 pointer-events-none">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute rounded-full animate-pulse"
-                  style={{
-                    width: `${form.particleMaxSize * 2}px`,
-                    height: `${form.particleMaxSize * 2}px`,
-                    left: `${(i * 8.3) % 100}%`,
-                    top: `${(i * 13.7) % 100}%`,
-                    background: form.particleColor,
-                    opacity: form.particleOpacity * 0.8,
-                    animationDelay: `${i * 0.2}s`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Background */}
-      <div>
-        <SectionHeader icon={<Layers className="w-4 h-4" />} title="Background" />
-        <div className="space-y-3">
-          <ControlRow label="Gradient Start">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Gradient End Color
+            </label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
-                value={form.bgGradientStart}
-                onChange={e => set('bgGradientStart', e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer border border-white/20 bg-transparent"
+                value={localSettings.heroGradientEnd}
+                onChange={(e) => setLocalSettings({ ...localSettings, heroGradientEnd: e.target.value })}
+                className="w-10 h-10 rounded border border-border cursor-pointer"
               />
-              <span className="text-xs text-white/50 font-mono">{form.bgGradientStart}</span>
-            </div>
-          </ControlRow>
-          <ControlRow label="Gradient End">
-            <div className="flex items-center gap-2">
               <input
-                type="color"
-                value={form.bgGradientEnd}
-                onChange={e => set('bgGradientEnd', e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer border border-white/20 bg-transparent"
+                type="text"
+                value={localSettings.heroGradientEnd}
+                onChange={(e) => setLocalSettings({ ...localSettings, heroGradientEnd: e.target.value })}
+                className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
-              <span className="text-xs text-white/50 font-mono">{form.bgGradientEnd}</span>
             </div>
-          </ControlRow>
-          <ControlRow label="Overlay Opacity">
-            <div className="flex items-center gap-3">
-              <Slider
-                min={0} max={100} step={1}
-                value={[Math.round(form.overlayOpacity * 100)]}
-                onValueChange={([v]) => set('overlayOpacity', v / 100)}
-                className="flex-1"
-              />
-              <span className="text-xs text-white/50 w-8 text-right">{Math.round(form.overlayOpacity * 100)}%</span>
-            </div>
-          </ControlRow>
-          <ControlRow label="Glassmorphism">
-            <div className="flex items-center gap-3">
-              <Slider
-                min={0} max={100} step={1}
-                value={[Math.round(form.glassmorphismIntensity * 100)]}
-                onValueChange={([v]) => set('glassmorphismIntensity', v / 100)}
-                className="flex-1"
-              />
-              <span className="text-xs text-white/50 w-8 text-right">{Math.round(form.glassmorphismIntensity * 100)}%</span>
-            </div>
-          </ControlRow>
-          <ControlRow label="Background Blur">
-            <Switch
-              checked={form.backgroundBlur}
-              onCheckedChange={v => set('backgroundBlur', v)}
-            />
-          </ControlRow>
+          </div>
         </div>
-      </div>
 
-      {/* Text */}
-      <div>
-        <SectionHeader icon={<Type className="w-4 h-4" />} title="Text & Colors" />
-        <div className="space-y-3">
-          <ControlRow label="Text Color">
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={form.textColor}
-                onChange={e => set('textColor', e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer border border-white/20 bg-transparent"
-              />
-              <span className="text-xs text-white/50 font-mono">{form.textColor}</span>
-            </div>
-          </ControlRow>
+        {/* Background Effect */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            Background Effect
+          </label>
+          <select
+            value={localSettings.backgroundEffect}
+            onChange={(e) => setLocalSettings({ ...localSettings, backgroundEffect: e.target.value })}
+            className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <option value="gradient">Gradient</option>
+            <option value="aurora">Aurora</option>
+            <option value="mesh">Mesh</option>
+            <option value="none">None</option>
+          </select>
         </div>
-      </div>
 
-      {/* Effects */}
-      <div>
-        <SectionHeader icon={<Zap className="w-4 h-4" />} title="Effects & Animation" />
-        <div className="space-y-3">
-          <ControlRow label="Animation Speed">
-            <div className="flex items-center gap-3">
-              <Slider
-                min={0} max={100} step={1}
-                value={[Math.round(form.animationSpeed * 10)]}
-                onValueChange={([v]) => set('animationSpeed', v / 10)}
-                className="flex-1"
-              />
-              <span className="text-xs text-white/50 w-8 text-right">{form.animationSpeed.toFixed(1)}x</span>
-            </div>
-          </ControlRow>
-          <ControlRow label="Mouse Parallax">
-            <Switch
-              checked={form.mouseParallaxEnabled}
-              onCheckedChange={v => set('mouseParallaxEnabled', v)}
-            />
-          </ControlRow>
-        </div>
-      </div>
-
-      {/* Particles */}
-      <div>
-        <SectionHeader icon={<Sparkles className="w-4 h-4" />} title="Particle Effects" />
-
-        {/* Preset Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-4">
-          {PARTICLE_PRESETS.map(preset => (
-            <button
-              key={preset.name}
-              onClick={() => set('particlePreset', preset.name)}
-              className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition-all duration-150 ${
-                form.particlePreset === preset.name
-                  ? 'border-cyan-400 bg-cyan-400/10 text-cyan-300'
-                  : 'border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white/80'
+        {/* Glassmorphism toggle */}
+        <div className="flex items-center justify-between py-2">
+          <div>
+            <p className="text-sm font-medium text-foreground">Glassmorphism</p>
+            <p className="text-xs text-muted-foreground">Enable glass card effects</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLocalSettings({ ...localSettings, glassmorphismEnabled: !localSettings.glassmorphismEnabled })}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              localSettings.glassmorphismEnabled ? 'bg-primary' : 'bg-muted'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                localSettings.glassmorphismEnabled ? 'translate-x-6' : 'translate-x-1'
               }`}
-            >
-              <span className="text-xl">{preset.emoji}</span>
-              <span className="text-[10px] font-medium leading-tight">{preset.name}</span>
-            </button>
-          ))}
+            />
+          </button>
         </div>
 
-        {/* Fine-tuning */}
-        {form.particlePreset !== 'None' && (
-          <div className="space-y-3 mt-4 p-3 rounded-lg bg-white/5 border border-white/10">
-            <p className="text-xs text-white/40 uppercase tracking-wider font-heading mb-3">Fine-tuning</p>
-
-            <ControlRow label="Particle Count">
-              <div className="flex items-center gap-3">
-                <Slider
-                  min={10} max={500} step={5}
-                  value={[Number(form.particleCount)]}
-                  onValueChange={([v]) => set('particleCount', BigInt(v))}
-                  className="flex-1"
-                />
-                <span className="text-xs text-white/50 w-10 text-right">{Number(form.particleCount)}</span>
+        {/* ── Hero Glow Effect ── */}
+        <div className="border-t border-border pt-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ background: heroGlow.enabled ? heroGlow.color : '#d1d5db' }}
+            />
+            Hero Glow Effect
+          </h3>
+          <div className="space-y-4">
+            {/* Enable toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Enable Glow</p>
+                <p className="text-xs text-muted-foreground">Show ambient light orbs in hero section</p>
               </div>
-            </ControlRow>
-
-            <ControlRow label="Min Size (px)">
-              <div className="flex items-center gap-3">
-                <Slider
-                  min={0.1} max={20} step={0.1}
-                  value={[form.particleMinSize]}
-                  onValueChange={([v]) => set('particleMinSize', v)}
-                  className="flex-1"
+              <button
+                type="button"
+                onClick={() => setHeroGlow({ ...heroGlow, enabled: !heroGlow.enabled })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  heroGlow.enabled ? 'bg-primary' : 'bg-muted'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    heroGlow.enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
                 />
-                <span className="text-xs text-white/50 w-10 text-right">{form.particleMinSize.toFixed(1)}</span>
-              </div>
-            </ControlRow>
+              </button>
+            </div>
 
-            <ControlRow label="Max Size (px)">
-              <div className="flex items-center gap-3">
-                <Slider
-                  min={0.5} max={50} step={0.5}
-                  value={[form.particleMaxSize]}
-                  onValueChange={([v]) => set('particleMaxSize', v)}
-                  className="flex-1"
-                />
-                <span className="text-xs text-white/50 w-10 text-right">{form.particleMaxSize.toFixed(1)}</span>
-              </div>
-            </ControlRow>
+            {heroGlow.enabled && (
+              <>
+                {/* Glow Color */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Glow Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={heroGlow.color}
+                      onChange={(e) => setHeroGlow({ ...heroGlow, color: e.target.value })}
+                      className="w-10 h-10 rounded border border-border cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={heroGlow.color}
+                      onChange={(e) => setHeroGlow({ ...heroGlow, color: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
 
-            <ControlRow label="Speed">
-              <div className="flex items-center gap-3">
-                <Slider
-                  min={0.1} max={10} step={0.1}
-                  value={[form.particleSpeed]}
-                  onValueChange={([v]) => set('particleSpeed', v)}
-                  className="flex-1"
-                />
-                <span className="text-xs text-white/50 w-10 text-right">{form.particleSpeed.toFixed(1)}</span>
-              </div>
-            </ControlRow>
+                {/* Glow Style */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Glow Style</label>
+                  <select
+                    value={heroGlow.style}
+                    onChange={(e) => setHeroGlow({ ...heroGlow, style: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    <option value="soft">Soft</option>
+                    <option value="shimmer">Shimmer</option>
+                    <option value="pulse">Pulse</option>
+                  </select>
+                </div>
 
-            <ControlRow label="Color">
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={form.particleColor}
-                  onChange={e => set('particleColor', e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer border border-white/20 bg-transparent"
-                />
-                <span className="text-xs text-white/50 font-mono">{form.particleColor}</span>
-              </div>
-            </ControlRow>
-
-            <ControlRow label="Opacity">
-              <div className="flex items-center gap-3">
-                <Slider
-                  min={0} max={100} step={1}
-                  value={[Math.round(form.particleOpacity * 100)]}
-                  onValueChange={([v]) => set('particleOpacity', v / 100)}
-                  className="flex-1"
-                />
-                <span className="text-xs text-white/50 w-8 text-right">{Math.round(form.particleOpacity * 100)}%</span>
-              </div>
-            </ControlRow>
+                {/* Glow Intensity */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
+                    Intensity: {heroGlow.intensity}
+                  </label>
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    value={heroGlow.intensity}
+                    onChange={(e) => setHeroGlow({ ...heroGlow, intensity: Number(e.target.value) })}
+                    className="w-full accent-primary"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Subtle</span>
+                    <span>Intense</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
+        </div>
+
+        {/* ── Footer Glow Effect ── */}
+        <div className="border-t border-border pt-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ background: footerGlow.enabled ? footerGlow.color : '#d1d5db' }}
+            />
+            Footer Glow Effect
+          </h3>
+          <div className="space-y-4">
+            {/* Enable toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Enable Glow</p>
+                <p className="text-xs text-muted-foreground">Show ambient light orbs in footer section</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFooterGlow({ ...footerGlow, enabled: !footerGlow.enabled })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  footerGlow.enabled ? 'bg-primary' : 'bg-muted'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    footerGlow.enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {footerGlow.enabled && (
+              <>
+                {/* Glow Color */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Glow Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={footerGlow.color}
+                      onChange={(e) => setFooterGlow({ ...footerGlow, color: e.target.value })}
+                      className="w-10 h-10 rounded border border-border cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={footerGlow.color}
+                      onChange={(e) => setFooterGlow({ ...footerGlow, color: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+
+                {/* Glow Style */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Glow Style</label>
+                  <select
+                    value={footerGlow.style}
+                    onChange={(e) => setFooterGlow({ ...footerGlow, style: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    <option value="soft">Soft</option>
+                    <option value="shimmer">Shimmer</option>
+                    <option value="pulse">Pulse</option>
+                  </select>
+                </div>
+
+                {/* Glow Intensity */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
+                    Intensity: {footerGlow.intensity}
+                  </label>
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    value={footerGlow.intensity}
+                    onChange={(e) => setFooterGlow({ ...footerGlow, intensity: Number(e.target.value) })}
+                    className="w-full accent-primary"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Subtle</span>
+                    <span>Intense</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Save */}
+        <div className="flex justify-end pt-2">
+          <button
+            onClick={handleSave}
+            disabled={updateHeroSettings.isPending}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+          >
+            {updateHeroSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Settings
+          </button>
+        </div>
+        {updateHeroSettings.isSuccess && (
+          <p className="text-sm text-right" style={{ color: 'oklch(0.55 0.15 155)' }}>Saved successfully!</p>
         )}
       </div>
-
-      {/* Save Button */}
-      <Button
-        onClick={handleSave}
-        disabled={updateMutation.isPending}
-        className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold font-heading"
-      >
-        {updateMutation.isPending ? (
-          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving…</>
-        ) : saved ? (
-          <><Check className="w-4 h-4 mr-2" /> Saved!</>
-        ) : (
-          'Save Hero Settings'
-        )}
-      </Button>
     </div>
   );
 }

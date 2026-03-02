@@ -1,48 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import AdminLogin from '../components/AdminLogin';
 import AdminDashboard from '../components/AdminDashboard';
-import { useActor } from '../hooks/useActor';
 import { useLogin } from '../hooks/useQueries';
 
 export default function AdminPanel() {
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const [loginError, setLoginError] = useState('');
-  const { actor } = useActor();
+  const [sessionToken, setSessionToken] = useState<string | null>(() => {
+    return sessionStorage.getItem('adminSessionToken') || localStorage.getItem('adminSessionToken');
+  });
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const loginMutation = useLogin();
 
-  useEffect(() => {
-    const stored =
-      localStorage.getItem('adminSessionToken') ||
-      sessionStorage.getItem('adminSessionToken');
-    if (stored && actor) {
-      actor
-        .validateSessionToken(stored)
-        .then(() => setSessionToken(stored))
-        .catch(() => {
-          localStorage.removeItem('adminSessionToken');
-          sessionStorage.removeItem('adminSessionToken');
-          setSessionToken(null);
-        });
-    }
-  }, [actor]);
-
-  const handleLogin = async (username: string, password: string) => {
-    setLoginError('');
+  const handleLogin = useCallback(async (username: string, password: string) => {
+    setLoginError(null);
     try {
       const token = await loginMutation.mutateAsync({ username, password });
-      sessionStorage.setItem('adminSessionToken', token);
-      localStorage.setItem('adminSessionToken', token);
-      setSessionToken(token);
-    } catch {
-      setLoginError('Invalid credentials. Please try again.');
+      if (token && typeof token === 'string' && token.length > 0) {
+        sessionStorage.setItem('adminSessionToken', token);
+        localStorage.setItem('adminSessionToken', token);
+        setSessionToken(token);
+      } else {
+        setLoginError('Login failed: no session token received. Please try again.');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      // Extract meaningful error from IC trap messages
+      const match = message.match(/Invalid credentials|Unauthorized|rejected/i);
+      if (match) {
+        setLoginError('Invalid username or password. Please try again.');
+      } else {
+        setLoginError(`Login failed: ${message}`);
+      }
     }
-  };
+  }, [loginMutation]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     sessionStorage.removeItem('adminSessionToken');
     localStorage.removeItem('adminSessionToken');
     setSessionToken(null);
-  };
+    setLoginError(null);
+  }, []);
 
   if (!sessionToken) {
     return (
@@ -54,5 +51,10 @@ export default function AdminPanel() {
     );
   }
 
-  return <AdminDashboard sessionToken={sessionToken} onLogout={handleLogout} />;
+  return (
+    <AdminDashboard
+      sessionToken={sessionToken}
+      onLogout={handleLogout}
+    />
+  );
 }

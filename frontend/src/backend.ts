@@ -97,31 +97,6 @@ export interface Clinic {
     phone: string;
     bookingUrl: string;
 }
-export interface IdleHeroSettings {
-    heroHeight: Variant_normal;
-    glassmorphismIntensity: number;
-    backgroundBlur: boolean;
-    particlePreset: string;
-    particleMaxSize: number;
-    particleOpacity: number;
-    bgGradientStart: string;
-    particleColor: string;
-    particleCount: bigint;
-    mouseParallaxEnabled: boolean;
-    animationSpeed: number;
-    particleSpeed: number;
-    particleMinSize: number;
-    overlayOpacity: number;
-    _version: bigint;
-    bgGradientEnd: string;
-    textColor: string;
-}
-export interface ServiceInput {
-    title: string;
-    description: string;
-    iconBase64: string;
-    iconUrl: string;
-}
 export interface ClinicInput {
     name: string;
     description: string;
@@ -129,6 +104,12 @@ export interface ClinicInput {
     mapUrl: string;
     phone: string;
     bookingUrl: string;
+}
+export interface GlowEffectSetting {
+    color: string;
+    enabled: boolean;
+    style: string;
+    intensity: bigint;
 }
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
@@ -151,9 +132,37 @@ export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
 }
+export interface HeroSettings {
+    showConnectionLines: boolean;
+    backgroundEffect: string;
+    footerGlowEffect: GlowEffectSetting;
+    particleColor: string;
+    particleCount: bigint;
+    heroGradientStart: string;
+    particleSpeed: number;
+    heroGradientEnd: string;
+    mouseInteraction: boolean;
+    heroGlowEffect: GlowEffectSetting;
+    particleSize: number;
+    glassmorphismEnabled: boolean;
+}
+export interface AboutImage {
+    imageType: string;
+    imageUrl: string;
+    imageBase64: string;
+}
+export interface ServiceInput {
+    title: string;
+    description: string;
+    iconBase64: string;
+    iconUrl: string;
+}
 export interface SocialLinkInput {
     url: string;
     platform: string;
+}
+export interface UserProfile {
+    name: string;
 }
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
@@ -163,9 +172,6 @@ export enum UserRole {
     admin = "admin",
     user = "user",
     guest = "guest"
-}
-export enum Variant_normal {
-    normal = "normal"
 }
 export interface backendInterface {
     _caffeineStorageBlobIsLive(hash: Uint8Array): Promise<boolean>;
@@ -186,18 +192,16 @@ export interface backendInterface {
     deleteService(id: bigint, sessionToken: string): Promise<void>;
     deleteServiceIcon(serviceId: bigint, sessionToken: string): Promise<void>;
     deleteSocialLink(id: bigint, sessionToken: string): Promise<void>;
-    getAboutImageBase64(): Promise<string>;
-    getAboutSection(): Promise<[string, string]>;
+    getAboutSection(): Promise<[string, AboutImage]>;
     getAllClinics(): Promise<Array<[bigint, Clinic]>>;
     getAllContent(): Promise<{
         clinics: Array<[bigint, Clinic]>;
         headerImageUrl: string;
-        heroSettings: IdleHeroSettings;
+        heroSettings: HeroSettings;
         siteTitle: string;
-        aboutImageBase64: string;
+        aboutImage: AboutImage;
         aboutSection: string;
         socialLinks: Array<[bigint, SocialLink]>;
-        aboutImageUrl: string;
         headerImageBase64: string;
         services: Array<[bigint, Service]>;
         footerContent: string;
@@ -205,39 +209,39 @@ export interface backendInterface {
     }>;
     getAllServices(): Promise<Array<[bigint, Service]>>;
     getAllSocialLinks(): Promise<Array<[bigint, SocialLink]>>;
-    getCallerUserProfile(): Promise<{
-        name: string;
-    } | null>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getFooterContent(): Promise<string>;
     getHeaderImageBase64(): Promise<string>;
-    getHeroSettings(): Promise<IdleHeroSettings>;
+    getHeroSettings(): Promise<HeroSettings>;
     getImages(): Promise<Images>;
     getServiceIconBase64(serviceId: bigint): Promise<string>;
     getSiteTitle(): Promise<string>;
-    getUserProfile(user: Principal): Promise<{
-        name: string;
-    } | null>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    /**
+     * / Login with username/password; returns a session token on success.
+     */
     login(username: string, password: string): Promise<string>;
-    saveCallerUserProfile(profile: {
-        name: string;
-    }): Promise<void>;
-    updateAboutImageBase64(imageBase64: string, sessionToken: string): Promise<void>;
-    updateAboutSection(text: string, imageUrl: string, sessionToken: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateAboutImage(newImage: AboutImage, sessionToken: string): Promise<void>;
+    updateAboutSection(text: string, sessionToken: string): Promise<void>;
     updateClinic(id: bigint, newClinicInput: ClinicInput, sessionToken: string): Promise<void>;
     updateFooterContent(content: string, sessionToken: string): Promise<void>;
     updateHeaderImageBase64(imageBase64: string, sessionToken: string): Promise<void>;
     updateHeroBackgroundImage(imageUrl: string, imageBase64: string, sessionToken: string): Promise<void>;
-    updateHeroSettings(newSettings: IdleHeroSettings, sessionToken: string): Promise<void>;
+    updateHeroSettings(newSettings: HeroSettings, sessionToken: string): Promise<void>;
     updateService(id: bigint, newServiceInput: ServiceInput, sessionToken: string): Promise<void>;
     updateServiceIconBase64(serviceId: bigint, imageBase64: string, sessionToken: string): Promise<void>;
     updateSiteTitle(title: string, sessionToken: string): Promise<void>;
     updateSocialLink(id: bigint, newLinkInput: SocialLinkInput, sessionToken: string): Promise<void>;
     upgradePersistentContent(heroBgUrl: string, heroBgBase64: string, siteTitleValue: string, aboutSectionText: string, aboutImgUrl: string, aboutImgBase64: string, headerImgUrl: string, headerImgBase64: string, footerContentText: string, clinicEntries: Array<[bigint, ClinicInput]>, serviceEntries: Array<[bigint, ServiceInput]>, sessionToken: string): Promise<void>;
+    /**
+     * / Validates a session token (public, read-only check).
+     */
     validateSessionToken(sessionToken: string): Promise<void>;
 }
-import type { Clinic as _Clinic, IdleHeroSettings as _IdleHeroSettings, Images as _Images, Service as _Service, SocialLink as _SocialLink, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -492,21 +496,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getAboutImageBase64(): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getAboutImageBase64();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getAboutImageBase64();
-            return result;
-        }
-    }
-    async getAboutSection(): Promise<[string, string]> {
+    async getAboutSection(): Promise<[string, AboutImage]> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAboutSection();
@@ -543,12 +533,11 @@ export class Backend implements backendInterface {
     async getAllContent(): Promise<{
         clinics: Array<[bigint, Clinic]>;
         headerImageUrl: string;
-        heroSettings: IdleHeroSettings;
+        heroSettings: HeroSettings;
         siteTitle: string;
-        aboutImageBase64: string;
+        aboutImage: AboutImage;
         aboutSection: string;
         socialLinks: Array<[bigint, SocialLink]>;
-        aboutImageUrl: string;
         headerImageBase64: string;
         services: Array<[bigint, Service]>;
         footerContent: string;
@@ -557,14 +546,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllContent();
-                return from_candid_record_n10(this._uploadFile, this._downloadFile, result);
+                return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllContent();
-            return from_candid_record_n10(this._uploadFile, this._downloadFile, result);
+            return result;
         }
     }
     async getAllServices(): Promise<Array<[bigint, Service]>> {
@@ -595,34 +584,32 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getCallerUserProfile(): Promise<{
-        name: string;
-    } | null> {
+    async getCallerUserProfile(): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n11(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n11(this._uploadFile, this._downloadFile, result);
         }
     }
     async getFooterContent(): Promise<string> {
@@ -653,18 +640,18 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getHeroSettings(): Promise<IdleHeroSettings> {
+    async getHeroSettings(): Promise<HeroSettings> {
         if (this.processError) {
             try {
                 const result = await this.actor.getHeroSettings();
-                return from_candid_IdleHeroSettings_n11(this._uploadFile, this._downloadFile, result);
+                return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getHeroSettings();
-            return from_candid_IdleHeroSettings_n11(this._uploadFile, this._downloadFile, result);
+            return result;
         }
     }
     async getImages(): Promise<Images> {
@@ -709,20 +696,18 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getUserProfile(arg0: Principal): Promise<{
-        name: string;
-    } | null> {
+    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -753,9 +738,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async saveCallerUserProfile(arg0: {
-        name: string;
-    }): Promise<void> {
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.saveCallerUserProfile(arg0);
@@ -769,31 +752,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateAboutImageBase64(arg0: string, arg1: string): Promise<void> {
+    async updateAboutImage(arg0: AboutImage, arg1: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateAboutImageBase64(arg0, arg1);
+                const result = await this.actor.updateAboutImage(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateAboutImageBase64(arg0, arg1);
+            const result = await this.actor.updateAboutImage(arg0, arg1);
             return result;
         }
     }
-    async updateAboutSection(arg0: string, arg1: string, arg2: string): Promise<void> {
+    async updateAboutSection(arg0: string, arg1: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateAboutSection(arg0, arg1, arg2);
+                const result = await this.actor.updateAboutSection(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateAboutSection(arg0, arg1, arg2);
+            const result = await this.actor.updateAboutSection(arg0, arg1);
             return result;
         }
     }
@@ -853,17 +836,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateHeroSettings(arg0: IdleHeroSettings, arg1: string): Promise<void> {
+    async updateHeroSettings(arg0: HeroSettings, arg1: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateHeroSettings(to_candid_IdleHeroSettings_n17(this._uploadFile, this._downloadFile, arg0), arg1);
+                const result = await this.actor.updateHeroSettings(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateHeroSettings(to_candid_IdleHeroSettings_n17(this._uploadFile, this._downloadFile, arg0), arg1);
+            const result = await this.actor.updateHeroSettings(arg0, arg1);
             return result;
         }
     }
@@ -952,20 +935,13 @@ export class Backend implements backendInterface {
         }
     }
 }
-function from_candid_IdleHeroSettings_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _IdleHeroSettings): IdleHeroSettings {
-    return from_candid_record_n12(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserRole_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n16(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
 function from_candid__CaffeineStorageRefillResult_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: __CaffeineStorageRefillResult): _CaffeineStorageRefillResult {
     return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [{
-        name: string;
-    }]): {
-    name: string;
-} | null {
+function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
@@ -973,107 +949,6 @@ function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 }
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
-}
-function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    clinics: Array<[bigint, _Clinic]>;
-    headerImageUrl: string;
-    heroSettings: _IdleHeroSettings;
-    siteTitle: string;
-    aboutImageBase64: string;
-    aboutSection: string;
-    socialLinks: Array<[bigint, _SocialLink]>;
-    aboutImageUrl: string;
-    headerImageBase64: string;
-    services: Array<[bigint, _Service]>;
-    footerContent: string;
-    images: _Images;
-}): {
-    clinics: Array<[bigint, Clinic]>;
-    headerImageUrl: string;
-    heroSettings: IdleHeroSettings;
-    siteTitle: string;
-    aboutImageBase64: string;
-    aboutSection: string;
-    socialLinks: Array<[bigint, SocialLink]>;
-    aboutImageUrl: string;
-    headerImageBase64: string;
-    services: Array<[bigint, Service]>;
-    footerContent: string;
-    images: Images;
-} {
-    return {
-        clinics: value.clinics,
-        headerImageUrl: value.headerImageUrl,
-        heroSettings: from_candid_IdleHeroSettings_n11(_uploadFile, _downloadFile, value.heroSettings),
-        siteTitle: value.siteTitle,
-        aboutImageBase64: value.aboutImageBase64,
-        aboutSection: value.aboutSection,
-        socialLinks: value.socialLinks,
-        aboutImageUrl: value.aboutImageUrl,
-        headerImageBase64: value.headerImageBase64,
-        services: value.services,
-        footerContent: value.footerContent,
-        images: value.images
-    };
-}
-function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    heroHeight: {
-        normal: null;
-    };
-    glassmorphismIntensity: number;
-    backgroundBlur: boolean;
-    particlePreset: string;
-    particleMaxSize: number;
-    particleOpacity: number;
-    bgGradientStart: string;
-    particleColor: string;
-    particleCount: bigint;
-    mouseParallaxEnabled: boolean;
-    animationSpeed: number;
-    particleSpeed: number;
-    particleMinSize: number;
-    overlayOpacity: number;
-    _version: bigint;
-    bgGradientEnd: string;
-    textColor: string;
-}): {
-    heroHeight: Variant_normal;
-    glassmorphismIntensity: number;
-    backgroundBlur: boolean;
-    particlePreset: string;
-    particleMaxSize: number;
-    particleOpacity: number;
-    bgGradientStart: string;
-    particleColor: string;
-    particleCount: bigint;
-    mouseParallaxEnabled: boolean;
-    animationSpeed: number;
-    particleSpeed: number;
-    particleMinSize: number;
-    overlayOpacity: number;
-    _version: bigint;
-    bgGradientEnd: string;
-    textColor: string;
-} {
-    return {
-        heroHeight: from_candid_variant_n13(_uploadFile, _downloadFile, value.heroHeight),
-        glassmorphismIntensity: value.glassmorphismIntensity,
-        backgroundBlur: value.backgroundBlur,
-        particlePreset: value.particlePreset,
-        particleMaxSize: value.particleMaxSize,
-        particleOpacity: value.particleOpacity,
-        bgGradientStart: value.bgGradientStart,
-        particleColor: value.particleColor,
-        particleCount: value.particleCount,
-        mouseParallaxEnabled: value.mouseParallaxEnabled,
-        animationSpeed: value.animationSpeed,
-        particleSpeed: value.particleSpeed,
-        particleMinSize: value.particleMinSize,
-        overlayOpacity: value.overlayOpacity,
-        _version: value._version,
-        bgGradientEnd: value.bgGradientEnd,
-        textColor: value.textColor
-    };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     success: [] | [boolean];
@@ -1087,12 +962,7 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
         topped_up_amount: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.topped_up_amount))
     };
 }
-function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    normal: null;
-}): Variant_normal {
-    return "normal" in value ? Variant_normal.normal : value;
-}
-function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
@@ -1100,9 +970,6 @@ function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Ui
     guest: null;
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
-}
-function to_candid_IdleHeroSettings_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: IdleHeroSettings): _IdleHeroSettings {
-    return to_candid_record_n18(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n9(_uploadFile, _downloadFile, value);
@@ -1113,65 +980,6 @@ function to_candid__CaffeineStorageRefillInformation_n2(_uploadFile: (file: Exte
 function to_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CaffeineStorageRefillInformation | null): [] | [__CaffeineStorageRefillInformation] {
     return value === null ? candid_none() : candid_some(to_candid__CaffeineStorageRefillInformation_n2(_uploadFile, _downloadFile, value));
 }
-function to_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    heroHeight: Variant_normal;
-    glassmorphismIntensity: number;
-    backgroundBlur: boolean;
-    particlePreset: string;
-    particleMaxSize: number;
-    particleOpacity: number;
-    bgGradientStart: string;
-    particleColor: string;
-    particleCount: bigint;
-    mouseParallaxEnabled: boolean;
-    animationSpeed: number;
-    particleSpeed: number;
-    particleMinSize: number;
-    overlayOpacity: number;
-    _version: bigint;
-    bgGradientEnd: string;
-    textColor: string;
-}): {
-    heroHeight: {
-        normal: null;
-    };
-    glassmorphismIntensity: number;
-    backgroundBlur: boolean;
-    particlePreset: string;
-    particleMaxSize: number;
-    particleOpacity: number;
-    bgGradientStart: string;
-    particleColor: string;
-    particleCount: bigint;
-    mouseParallaxEnabled: boolean;
-    animationSpeed: number;
-    particleSpeed: number;
-    particleMinSize: number;
-    overlayOpacity: number;
-    _version: bigint;
-    bgGradientEnd: string;
-    textColor: string;
-} {
-    return {
-        heroHeight: to_candid_variant_n19(_uploadFile, _downloadFile, value.heroHeight),
-        glassmorphismIntensity: value.glassmorphismIntensity,
-        backgroundBlur: value.backgroundBlur,
-        particlePreset: value.particlePreset,
-        particleMaxSize: value.particleMaxSize,
-        particleOpacity: value.particleOpacity,
-        bgGradientStart: value.bgGradientStart,
-        particleColor: value.particleColor,
-        particleCount: value.particleCount,
-        mouseParallaxEnabled: value.mouseParallaxEnabled,
-        animationSpeed: value.animationSpeed,
-        particleSpeed: value.particleSpeed,
-        particleMinSize: value.particleMinSize,
-        overlayOpacity: value.overlayOpacity,
-        _version: value._version,
-        bgGradientEnd: value.bgGradientEnd,
-        textColor: value.textColor
-    };
-}
 function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     proposed_top_up_amount?: bigint;
 }): {
@@ -1180,13 +988,6 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
     return {
         proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
-}
-function to_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Variant_normal): {
-    normal: null;
-} {
-    return value == Variant_normal.normal ? {
-        normal: null
-    } : value;
 }
 function to_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
     admin: null;

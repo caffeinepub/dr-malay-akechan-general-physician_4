@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import {
-  LayoutDashboard, FileText, Stethoscope, MapPin, Share2,
-  Image, Settings, LogOut, ChevronRight, Menu, X
-} from 'lucide-react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useActor } from '../hooks/useActor';
 import AboutEditor from './admin/AboutEditor';
 import ClinicsManager from './admin/ClinicsManager';
 import ServicesManager from './admin/ServicesManager';
@@ -11,7 +9,23 @@ import FooterEditor from './admin/FooterEditor';
 import HeaderEditor from './admin/HeaderEditor';
 import HeroSettingsEditor from './admin/HeroSettingsEditor';
 import ImagesManager from './admin/ImagesManager';
-import { useGetAllContent } from '../hooks/useQueries';
+import {
+  LayoutDashboard,
+  User,
+  Building2,
+  Stethoscope,
+  Share2,
+  FileText,
+  Image,
+  Settings,
+  LogOut,
+  ChevronRight,
+} from 'lucide-react';
+
+interface AdminDashboardProps {
+  sessionToken: string;
+  onLogout: () => void;
+}
 
 type Section =
   | 'overview'
@@ -24,27 +38,36 @@ type Section =
   | 'footer'
   | 'images';
 
-interface AdminDashboardProps {
-  sessionToken: string;
-  onLogout: () => void;
-}
-
-const navItems: { id: Section; label: string; icon: React.ReactNode }[] = [
-  { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
-  { id: 'header', label: 'Site Title', icon: <FileText className="w-4 h-4" /> },
-  { id: 'hero', label: 'Hero Settings', icon: <Settings className="w-4 h-4" /> },
-  { id: 'about', label: 'About', icon: <FileText className="w-4 h-4" /> },
-  { id: 'services', label: 'Services', icon: <Stethoscope className="w-4 h-4" /> },
-  { id: 'clinics', label: 'Clinics', icon: <MapPin className="w-4 h-4" /> },
-  { id: 'social', label: 'Social Links', icon: <Share2 className="w-4 h-4" /> },
-  { id: 'footer', label: 'Footer', icon: <FileText className="w-4 h-4" /> },
-  { id: 'images', label: 'Images', icon: <Image className="w-4 h-4" /> },
+const navItems: { id: Section; label: string; icon: React.ReactNode; description: string }[] = [
+  { id: 'overview',  label: 'Overview',      icon: <LayoutDashboard size={18} />, description: 'Dashboard overview' },
+  { id: 'header',    label: 'Header',         icon: <FileText size={18} />,        description: 'Site title & header image' },
+  { id: 'hero',      label: 'Hero Settings',  icon: <Settings size={18} />,        description: 'Particle effects & gradients' },
+  { id: 'images',    label: 'Images',         icon: <Image size={18} />,           description: 'Hero background image' },
+  { id: 'about',     label: 'About Doctor',   icon: <User size={18} />,            description: 'Bio & profile photo' },
+  { id: 'services',  label: 'Services',       icon: <Stethoscope size={18} />,     description: 'Medical services list' },
+  { id: 'clinics',   label: 'Clinics',        icon: <Building2 size={18} />,       description: 'Clinic locations' },
+  { id: 'social',    label: 'Social Links',   icon: <Share2 size={18} />,          description: 'Social media profiles' },
+  { id: 'footer',    label: 'Footer',         icon: <FileText size={18} />,        description: 'Footer content & glow' },
 ];
 
 export default function AdminDashboard({ sessionToken, onLogout }: AdminDashboardProps) {
   const [activeSection, setActiveSection] = useState<Section>('overview');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { data: content } = useGetAllContent();
+  const { actor, isFetching } = useActor();
+  const queryClient = useQueryClient();
+
+  const { data: content } = useQuery({
+    queryKey: ['allContent'],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getAllContent();
+    },
+    enabled: !!actor && !isFetching,
+  });
+
+  const handleLogout = () => {
+    queryClient.clear();
+    onLogout();
+  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -52,46 +75,68 @@ export default function AdminDashboard({ sessionToken, onLogout }: AdminDashboar
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-1">Dashboard Overview</h2>
-              <p className="text-muted-foreground text-sm">Manage your medical profile content.</p>
+              <h2 className="text-2xl font-heading font-bold text-foreground mb-1">Dashboard Overview</h2>
+              <p className="text-muted-foreground text-sm">Manage all aspects of your medical practice website.</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { label: 'Services', count: content?.services?.length ?? 0, color: 'bg-teal-50 text-teal-700 border-teal-200' },
-                { label: 'Clinics', count: content?.clinics?.length ?? 0, color: 'bg-blue-50 text-blue-700 border-blue-200' },
-                { label: 'Social Links', count: content?.socialLinks?.length ?? 0, color: 'bg-purple-50 text-purple-700 border-purple-200' },
-                { label: 'Sections', count: 5, color: 'bg-amber-50 text-amber-700 border-amber-200' },
-              ].map((item) => (
-                <div key={item.label} className={`rounded-xl border p-4 ${item.color}`}>
-                  <p className="text-2xl font-bold font-display">{item.count}</p>
-                  <p className="text-sm font-medium mt-1">{item.label}</p>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {navItems.filter(i => i.id !== 'overview').map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className="group text-left p-5 rounded-xl border border-border bg-card hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/20 transition-colors">
+                      {item.icon}
+                    </div>
+                    <ChevronRight size={16} className="text-muted-foreground group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-sm mb-1">{item.label}</h3>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                </button>
               ))}
             </div>
-            <div className="bg-muted/50 rounded-xl border border-border p-6">
-              <h3 className="font-semibold text-foreground mb-3">Quick Actions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {navItems.slice(1).map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveSection(item.id)}
-                    className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border hover:border-primary hover:text-primary transition-colors text-sm font-medium text-foreground"
-                  >
-                    <span className="text-primary">{item.icon}</span>
-                    {item.label}
-                    <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
-                  </button>
+
+            {/* Quick stats */}
+            {content && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                {[
+                  { label: 'Services',    value: content.services.length },
+                  { label: 'Clinics',     value: content.clinics.length },
+                  { label: 'Social Links',value: content.socialLinks.length },
+                  { label: 'Site Title',  value: content.siteTitle ? '✓' : '—' },
+                ].map((stat) => (
+                  <div key={stat.label} className="p-4 rounded-xl border border-border bg-card text-center">
+                    <div className="text-2xl font-bold font-heading text-cyan-400">{stat.value}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
+                  </div>
                 ))}
               </div>
-            </div>
+            )}
           </div>
         );
       case 'header':
-        return <HeaderEditor sessionToken={sessionToken} currentText={content?.siteTitle || ''} currentImageUrl={content?.headerImageUrl || ''} currentImageBase64={content?.headerImageBase64 || ''} />;
+        return (
+          <HeaderEditor
+            sessionToken={sessionToken}
+            currentText={content?.siteTitle ?? ''}
+            currentImageUrl={content?.headerImageUrl ?? ''}
+            currentImageBase64={content?.headerImageBase64 ?? ''}
+          />
+        );
       case 'hero':
         return <HeroSettingsEditor sessionToken={sessionToken} />;
+      case 'images':
+        return <ImagesManager sessionToken={sessionToken} />;
       case 'about':
-        return <AboutEditor sessionToken={sessionToken} currentText={content?.aboutSection || ''} currentImageUrl={content?.aboutImageUrl || ''} currentImageBase64={content?.aboutImageBase64 || ''} />;
+        return (
+          <AboutEditor
+            sessionToken={sessionToken}
+            currentText={content?.aboutSection ?? ''}
+            currentImageUrl={content?.aboutImage?.imageUrl ?? ''}
+            currentImageBase64={content?.aboutImage?.imageBase64 ?? ''}
+          />
+        );
       case 'services':
         return <ServicesManager sessionToken={sessionToken} />;
       case 'clinics':
@@ -99,96 +144,81 @@ export default function AdminDashboard({ sessionToken, onLogout }: AdminDashboar
       case 'social':
         return <SocialLinksManager sessionToken={sessionToken} />;
       case 'footer':
-        return <FooterEditor sessionToken={sessionToken} currentContent={content?.footerContent || ''} />;
-      case 'images':
-        return <ImagesManager sessionToken={sessionToken} />;
+        return <FooterEditor sessionToken={sessionToken} currentContent={content?.footerContent ?? ''} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-border flex flex-col transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:flex`}
-      >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <div className="flex items-center gap-2 text-primary font-display font-semibold">
-            <Stethoscope className="w-5 h-5" />
-            <span>Admin Panel</span>
+      <aside className="w-64 shrink-0 border-r border-border bg-card flex flex-col">
+        {/* Logo / Brand */}
+        <div className="px-5 py-5 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <Stethoscope size={16} className="text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground leading-none">Admin Panel</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Medical Practice</p>
+            </div>
           </div>
-          <button
-            className="lg:hidden text-muted-foreground hover:text-foreground"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
-        {/* Nav */}
+        {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => { setActiveSection(item.id); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                activeSection === item.id
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          ))}
+          {navItems.map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  isActive
+                    ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <span className={isActive ? 'text-cyan-400' : 'text-muted-foreground'}>{item.icon}</span>
+                {item.label}
+                {isActive && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Logout */}
         <div className="px-3 py-4 border-t border-border">
           <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut size={18} />
             Logout
           </button>
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto">
         {/* Top bar */}
-        <header className="bg-white border-b border-border px-4 sm:px-6 py-4 flex items-center gap-4">
-          <button
-            className="lg:hidden text-muted-foreground hover:text-foreground"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="font-display font-semibold text-foreground">
-              {navItems.find((n) => n.id === activeSection)?.label || 'Dashboard'}
-            </h1>
+        <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-sm px-8 py-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Admin</span>
+            <ChevronRight size={14} />
+            <span className="text-foreground font-medium">
+              {navItems.find(i => i.id === activeSection)?.label ?? 'Overview'}
+            </span>
           </div>
-        </header>
+        </div>
 
-        {/* Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        {/* Editor area */}
+        <div className="px-8 py-8 max-w-4xl">
           {renderContent()}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

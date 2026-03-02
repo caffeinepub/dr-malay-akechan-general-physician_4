@@ -42,6 +42,11 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const AboutImage = IDL.Record({
+  'imageType' : IDL.Text,
+  'imageUrl' : IDL.Text,
+  'imageBase64' : IDL.Text,
+});
 export const Clinic = IDL.Record({
   'name' : IDL.Text,
   'description' : IDL.Text,
@@ -50,24 +55,25 @@ export const Clinic = IDL.Record({
   'phone' : IDL.Text,
   'bookingUrl' : IDL.Text,
 });
-export const IdleHeroSettings = IDL.Record({
-  'heroHeight' : IDL.Variant({ 'normal' : IDL.Null }),
-  'glassmorphismIntensity' : IDL.Float64,
-  'backgroundBlur' : IDL.Bool,
-  'particlePreset' : IDL.Text,
-  'particleMaxSize' : IDL.Float64,
-  'particleOpacity' : IDL.Float64,
-  'bgGradientStart' : IDL.Text,
+export const GlowEffectSetting = IDL.Record({
+  'color' : IDL.Text,
+  'enabled' : IDL.Bool,
+  'style' : IDL.Text,
+  'intensity' : IDL.Nat,
+});
+export const HeroSettings = IDL.Record({
+  'showConnectionLines' : IDL.Bool,
+  'backgroundEffect' : IDL.Text,
+  'footerGlowEffect' : GlowEffectSetting,
   'particleColor' : IDL.Text,
   'particleCount' : IDL.Nat,
-  'mouseParallaxEnabled' : IDL.Bool,
-  'animationSpeed' : IDL.Float64,
+  'heroGradientStart' : IDL.Text,
   'particleSpeed' : IDL.Float64,
-  'particleMinSize' : IDL.Float64,
-  'overlayOpacity' : IDL.Float64,
-  '_version' : IDL.Nat,
-  'bgGradientEnd' : IDL.Text,
-  'textColor' : IDL.Text,
+  'heroGradientEnd' : IDL.Text,
+  'mouseInteraction' : IDL.Bool,
+  'heroGlowEffect' : GlowEffectSetting,
+  'particleSize' : IDL.Float64,
+  'glassmorphismEnabled' : IDL.Bool,
 });
 export const SocialLink = IDL.Record({
   'url' : IDL.Text,
@@ -83,6 +89,7 @@ export const Images = IDL.Record({
   'heroBackgroundUrl' : IDL.Text,
   'heroBackgroundBase64' : IDL.Text,
 });
+export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -123,8 +130,7 @@ export const idlService = IDL.Service({
   'deleteService' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'deleteServiceIcon' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'deleteSocialLink' : IDL.Func([IDL.Nat, IDL.Text], [], []),
-  'getAboutImageBase64' : IDL.Func([], [IDL.Text], ['query']),
-  'getAboutSection' : IDL.Func([], [IDL.Text, IDL.Text], ['query']),
+  'getAboutSection' : IDL.Func([], [IDL.Text, AboutImage], ['query']),
   'getAllClinics' : IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(IDL.Nat, Clinic))],
@@ -136,12 +142,11 @@ export const idlService = IDL.Service({
         IDL.Record({
           'clinics' : IDL.Vec(IDL.Tuple(IDL.Nat, Clinic)),
           'headerImageUrl' : IDL.Text,
-          'heroSettings' : IdleHeroSettings,
+          'heroSettings' : HeroSettings,
           'siteTitle' : IDL.Text,
-          'aboutImageBase64' : IDL.Text,
+          'aboutImage' : AboutImage,
           'aboutSection' : IDL.Text,
           'socialLinks' : IDL.Vec(IDL.Tuple(IDL.Nat, SocialLink)),
-          'aboutImageUrl' : IDL.Text,
           'headerImageBase64' : IDL.Text,
           'services' : IDL.Vec(IDL.Tuple(IDL.Nat, Service)),
           'footerContent' : IDL.Text,
@@ -160,32 +165,24 @@ export const idlService = IDL.Service({
       [IDL.Vec(IDL.Tuple(IDL.Nat, SocialLink))],
       ['query'],
     ),
-  'getCallerUserProfile' : IDL.Func(
-      [],
-      [IDL.Opt(IDL.Record({ 'name' : IDL.Text }))],
-      ['query'],
-    ),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getFooterContent' : IDL.Func([], [IDL.Text], ['query']),
   'getHeaderImageBase64' : IDL.Func([], [IDL.Text], ['query']),
-  'getHeroSettings' : IDL.Func([], [IdleHeroSettings], ['query']),
+  'getHeroSettings' : IDL.Func([], [HeroSettings], ['query']),
   'getImages' : IDL.Func([], [Images], ['query']),
   'getServiceIconBase64' : IDL.Func([IDL.Nat], [IDL.Text], ['query']),
   'getSiteTitle' : IDL.Func([], [IDL.Text], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
-      [IDL.Opt(IDL.Record({ 'name' : IDL.Text }))],
+      [IDL.Opt(UserProfile)],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'login' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
-  'saveCallerUserProfile' : IDL.Func(
-      [IDL.Record({ 'name' : IDL.Text })],
-      [],
-      [],
-    ),
-  'updateAboutImageBase64' : IDL.Func([IDL.Text, IDL.Text], [], []),
-  'updateAboutSection' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'updateAboutImage' : IDL.Func([AboutImage, IDL.Text], [], []),
+  'updateAboutSection' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'updateClinic' : IDL.Func([IDL.Nat, ClinicInput, IDL.Text], [], []),
   'updateFooterContent' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'updateHeaderImageBase64' : IDL.Func([IDL.Text, IDL.Text], [], []),
@@ -194,7 +191,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
-  'updateHeroSettings' : IDL.Func([IdleHeroSettings, IDL.Text], [], []),
+  'updateHeroSettings' : IDL.Func([HeroSettings, IDL.Text], [], []),
   'updateService' : IDL.Func([IDL.Nat, ServiceInput, IDL.Text], [], []),
   'updateServiceIconBase64' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
   'updateSiteTitle' : IDL.Func([IDL.Text, IDL.Text], [], []),
@@ -257,6 +254,11 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const AboutImage = IDL.Record({
+    'imageType' : IDL.Text,
+    'imageUrl' : IDL.Text,
+    'imageBase64' : IDL.Text,
+  });
   const Clinic = IDL.Record({
     'name' : IDL.Text,
     'description' : IDL.Text,
@@ -265,24 +267,25 @@ export const idlFactory = ({ IDL }) => {
     'phone' : IDL.Text,
     'bookingUrl' : IDL.Text,
   });
-  const IdleHeroSettings = IDL.Record({
-    'heroHeight' : IDL.Variant({ 'normal' : IDL.Null }),
-    'glassmorphismIntensity' : IDL.Float64,
-    'backgroundBlur' : IDL.Bool,
-    'particlePreset' : IDL.Text,
-    'particleMaxSize' : IDL.Float64,
-    'particleOpacity' : IDL.Float64,
-    'bgGradientStart' : IDL.Text,
+  const GlowEffectSetting = IDL.Record({
+    'color' : IDL.Text,
+    'enabled' : IDL.Bool,
+    'style' : IDL.Text,
+    'intensity' : IDL.Nat,
+  });
+  const HeroSettings = IDL.Record({
+    'showConnectionLines' : IDL.Bool,
+    'backgroundEffect' : IDL.Text,
+    'footerGlowEffect' : GlowEffectSetting,
     'particleColor' : IDL.Text,
     'particleCount' : IDL.Nat,
-    'mouseParallaxEnabled' : IDL.Bool,
-    'animationSpeed' : IDL.Float64,
+    'heroGradientStart' : IDL.Text,
     'particleSpeed' : IDL.Float64,
-    'particleMinSize' : IDL.Float64,
-    'overlayOpacity' : IDL.Float64,
-    '_version' : IDL.Nat,
-    'bgGradientEnd' : IDL.Text,
-    'textColor' : IDL.Text,
+    'heroGradientEnd' : IDL.Text,
+    'mouseInteraction' : IDL.Bool,
+    'heroGlowEffect' : GlowEffectSetting,
+    'particleSize' : IDL.Float64,
+    'glassmorphismEnabled' : IDL.Bool,
   });
   const SocialLink = IDL.Record({ 'url' : IDL.Text, 'platform' : IDL.Text });
   const Service = IDL.Record({
@@ -295,6 +298,7 @@ export const idlFactory = ({ IDL }) => {
     'heroBackgroundUrl' : IDL.Text,
     'heroBackgroundBase64' : IDL.Text,
   });
+  const UserProfile = IDL.Record({ 'name' : IDL.Text });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -335,8 +339,7 @@ export const idlFactory = ({ IDL }) => {
     'deleteService' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'deleteServiceIcon' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'deleteSocialLink' : IDL.Func([IDL.Nat, IDL.Text], [], []),
-    'getAboutImageBase64' : IDL.Func([], [IDL.Text], ['query']),
-    'getAboutSection' : IDL.Func([], [IDL.Text, IDL.Text], ['query']),
+    'getAboutSection' : IDL.Func([], [IDL.Text, AboutImage], ['query']),
     'getAllClinics' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Nat, Clinic))],
@@ -348,12 +351,11 @@ export const idlFactory = ({ IDL }) => {
           IDL.Record({
             'clinics' : IDL.Vec(IDL.Tuple(IDL.Nat, Clinic)),
             'headerImageUrl' : IDL.Text,
-            'heroSettings' : IdleHeroSettings,
+            'heroSettings' : HeroSettings,
             'siteTitle' : IDL.Text,
-            'aboutImageBase64' : IDL.Text,
+            'aboutImage' : AboutImage,
             'aboutSection' : IDL.Text,
             'socialLinks' : IDL.Vec(IDL.Tuple(IDL.Nat, SocialLink)),
-            'aboutImageUrl' : IDL.Text,
             'headerImageBase64' : IDL.Text,
             'services' : IDL.Vec(IDL.Tuple(IDL.Nat, Service)),
             'footerContent' : IDL.Text,
@@ -372,32 +374,24 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Nat, SocialLink))],
         ['query'],
       ),
-    'getCallerUserProfile' : IDL.Func(
-        [],
-        [IDL.Opt(IDL.Record({ 'name' : IDL.Text }))],
-        ['query'],
-      ),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getFooterContent' : IDL.Func([], [IDL.Text], ['query']),
     'getHeaderImageBase64' : IDL.Func([], [IDL.Text], ['query']),
-    'getHeroSettings' : IDL.Func([], [IdleHeroSettings], ['query']),
+    'getHeroSettings' : IDL.Func([], [HeroSettings], ['query']),
     'getImages' : IDL.Func([], [Images], ['query']),
     'getServiceIconBase64' : IDL.Func([IDL.Nat], [IDL.Text], ['query']),
     'getSiteTitle' : IDL.Func([], [IDL.Text], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
-        [IDL.Opt(IDL.Record({ 'name' : IDL.Text }))],
+        [IDL.Opt(UserProfile)],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'login' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
-    'saveCallerUserProfile' : IDL.Func(
-        [IDL.Record({ 'name' : IDL.Text })],
-        [],
-        [],
-      ),
-    'updateAboutImageBase64' : IDL.Func([IDL.Text, IDL.Text], [], []),
-    'updateAboutSection' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'updateAboutImage' : IDL.Func([AboutImage, IDL.Text], [], []),
+    'updateAboutSection' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateClinic' : IDL.Func([IDL.Nat, ClinicInput, IDL.Text], [], []),
     'updateFooterContent' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateHeaderImageBase64' : IDL.Func([IDL.Text, IDL.Text], [], []),
@@ -406,7 +400,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
-    'updateHeroSettings' : IDL.Func([IdleHeroSettings, IDL.Text], [], []),
+    'updateHeroSettings' : IDL.Func([HeroSettings, IDL.Text], [], []),
     'updateService' : IDL.Func([IDL.Nat, ServiceInput, IDL.Text], [], []),
     'updateServiceIconBase64' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
     'updateSiteTitle' : IDL.Func([IDL.Text, IDL.Text], [], []),

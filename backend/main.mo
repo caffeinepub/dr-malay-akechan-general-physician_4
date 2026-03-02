@@ -2,15 +2,13 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
-import Float "mo:core/Float";
 import Principal "mo:core/Principal";
-
-import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 
-(with migration = Migration.run)
+
+
 actor {
   // Mix in storage functionality
   include MixinStorage();
@@ -19,29 +17,35 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  let userProfiles = Map.empty<Principal, { name : Text }>();
+  // ── User Profile ─────────────────────────────────────────────────────────────
+  type UserProfile = {
+    name : Text;
+  };
 
-  public query ({ caller }) func getCallerUserProfile() : async ?{ name : Text } {
+  let userProfiles = Map.empty<Principal, UserProfile>();
+
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can get profiles");
     };
     userProfiles.get(caller);
   };
 
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?{ name : Text } {
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
   };
 
-  public shared ({ caller }) func saveCallerUserProfile(profile : { name : Text }) : async () {
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
   };
 
+  // ── Domain Types ─────────────────────────────────────────────────────────────
   type Service = {
     title : Text;
     description : Text;
@@ -63,30 +67,9 @@ actor {
     url : Text;
   };
 
-  type IdleHeroSettings = {
-    _version : Nat;
-    bgGradientStart : Text;
-    bgGradientEnd : Text;
-    overlayOpacity : Float;
-    textColor : Text;
-    backgroundBlur : Bool;
-    glassmorphismIntensity : Float;
-    heroHeight : { #normal };
-    animationSpeed : Float;
-    mouseParallaxEnabled : Bool;
-    particlePreset : Text;
-    particleCount : Nat;
-    particleMinSize : Float;
-    particleMaxSize : Float;
-    particleSpeed : Float;
-    particleColor : Text;
-    particleOpacity : Float;
-  };
-
-  type Images = {
-    heroBackgroundUrl : Text;
-    heroBackgroundBase64 : Text;
-  };
+  type ServiceId = Nat;
+  type ClinicId = Nat;
+  type SocialLinkId = Nat;
 
   type ServiceInput = {
     title : Text;
@@ -109,6 +92,40 @@ actor {
     url : Text;
   };
 
+  type Images = {
+    heroBackgroundUrl : Text;
+    heroBackgroundBase64 : Text;
+  };
+
+  type GlowEffectSetting = {
+    enabled : Bool;
+    intensity : Nat;
+    color : Text;
+    style : Text;
+  };
+
+  type HeroSettings = {
+    particleCount : Nat;
+    particleSpeed : Float;
+    particleSize : Float;
+    particleColor : Text;
+    showConnectionLines : Bool;
+    mouseInteraction : Bool;
+    backgroundEffect : Text;
+    glassmorphismEnabled : Bool;
+    heroGradientStart : Text;
+    heroGradientEnd : Text;
+    heroGlowEffect : GlowEffectSetting;
+    footerGlowEffect : GlowEffectSetting;
+  };
+
+  type AboutImage = {
+    imageUrl : Text;
+    imageBase64 : Text;
+    imageType : Text;
+  };
+
+  // ── Stable State ─────────────────────────────────────────────────────────────
   var clinics = Map.empty<Nat, Clinic>();
   var services = Map.empty<Nat, Service>();
   let socialLinks = Map.empty<Nat, SocialLink>();
@@ -116,34 +133,43 @@ actor {
 
   var siteTitle : Text = "";
   var aboutSection : Text = "";
-  var aboutImageUrl : Text = "";
-  var aboutImageBase64 : Text = "";
   var headerImageUrl : Text = "";
   var headerImageBase64 : Text = "";
   var footerContent : Text = "";
-  var heroSettings = {
-    _version = 1;
-    bgGradientStart = "#40A1FF";
-    bgGradientEnd = "#A993FF";
-    overlayOpacity = 0.95;
-    textColor = "#ffffff";
-    backgroundBlur = true;
-    glassmorphismIntensity = 0.7;
-    heroHeight = #normal;
-    animationSpeed = 1.0;
-    mouseParallaxEnabled = true;
-    particlePreset = "Floating Dots";
-    particleCount = 120;
-    particleMinSize = 0.15;
-    particleMaxSize = 2.8;
-    particleSpeed = 1.2;
-    particleColor = "#38F9D7";
-    particleOpacity = 0.85;
+  var heroSettings : HeroSettings = {
+    particleCount = 70;
+    particleSpeed = 1.5;
+    particleSize = 2.5;
+    particleColor = "#90EE90";
+    showConnectionLines = true;
+    mouseInteraction = true;
+    backgroundEffect = "gradient";
+    glassmorphismEnabled = true;
+    heroGradientStart = "#40A1FF";
+    heroGradientEnd = "#A993FF";
+    heroGlowEffect = {
+      enabled = true;
+      intensity = 5;
+      color = "#FBE981";
+      style = "soft";
+    };
+    footerGlowEffect = {
+      enabled = false;
+      intensity = 3;
+      color = "#FF6399";
+      style = "shimmer";
+    };
   };
 
   var images : Images = {
     heroBackgroundUrl = "";
     heroBackgroundBase64 = "";
+  };
+
+  var aboutImage : AboutImage = {
+    imageUrl = "";
+    imageBase64 = "";
+    imageType = "url";
   };
 
   let adminUsername = "malay";
@@ -153,12 +179,18 @@ actor {
   var nextServiceId = 0;
   var nextSocialLinkId = 0;
 
+  // ── Session Token Helpers ────────────────────────────────────────────────────
+
+  /// Validates a session token; traps if invalid.
   func requireValidSession(sessionToken : Text) {
     if (not sessionTokens.containsKey(sessionToken)) {
       Runtime.trap("Unauthorized: Invalid session token");
     };
   };
 
+  // ── Authentication ───────────────────────────────────────────────────────────
+
+  /// Login with username/password; returns a session token on success.
   public shared ({ caller }) func login(username : Text, password : Text) : async Text {
     if (username == adminUsername and password == adminPassword) {
       let sessionToken = caller.toText();
@@ -169,19 +201,23 @@ actor {
     };
   };
 
+  /// Validates a session token (public, read-only check).
   public shared ({ caller }) func validateSessionToken(sessionToken : Text) : async () {
     requireValidSession(sessionToken);
   };
 
-  // Hero Settings Endpoints
-  public query ({ caller }) func getHeroSettings() : async IdleHeroSettings {
+  // ── Hero Settings Endpoints ──────────────────────────────────────────────────
+
+  public query ({ caller }) func getHeroSettings() : async HeroSettings {
     heroSettings;
   };
 
-  public shared ({ caller }) func updateHeroSettings(newSettings : IdleHeroSettings, sessionToken : Text) : async () {
+  public shared ({ caller }) func updateHeroSettings(newSettings : HeroSettings, sessionToken : Text) : async () {
     requireValidSession(sessionToken);
-    heroSettings := { newSettings with _version = 1 };
+    heroSettings := newSettings;
   };
+
+  // ── Clinic Content Update by Upgrade ─────────────────────────────────────────
 
   public shared ({ caller }) func upgradePersistentContent(
     heroBgUrl : Text,
@@ -206,11 +242,15 @@ actor {
     };
     siteTitle := siteTitleValue;
     aboutSection := aboutSectionText;
-    aboutImageUrl := aboutImgUrl;
-    aboutImageBase64 := aboutImgBase64;
     headerImageUrl := headerImgUrl;
     headerImageBase64 := headerImgBase64;
     footerContent := footerContentText;
+
+    aboutImage := {
+      imageUrl = aboutImgUrl;
+      imageBase64 = aboutImgBase64;
+      imageType = if (aboutImgBase64 != "") { "base64" } else { "url" };
+    };
 
     filteredClinicEntries(
       clinicEntries,
@@ -254,22 +294,19 @@ actor {
   public query ({ caller }) func getAllContent() : async {
     siteTitle : Text;
     aboutSection : Text;
-    aboutImageUrl : Text;
-    aboutImageBase64 : Text;
     headerImageUrl : Text;
     headerImageBase64 : Text;
-    heroSettings : IdleHeroSettings;
+    heroSettings : HeroSettings;
     footerContent : Text;
     clinics : [(Nat, Clinic)];
     services : [(Nat, Service)];
     socialLinks : [(Nat, SocialLink)];
     images : Images;
+    aboutImage : AboutImage;
   } {
     {
       siteTitle;
       aboutSection;
-      aboutImageUrl;
-      aboutImageBase64;
       headerImageUrl;
       headerImageBase64;
       heroSettings;
@@ -278,6 +315,7 @@ actor {
       services = services.toArray();
       socialLinks = socialLinks.toArray();
       images = images;
+      aboutImage = aboutImage;
     };
   };
 
@@ -285,8 +323,8 @@ actor {
     siteTitle;
   };
 
-  public query ({ caller }) func getAboutSection() : async (Text, Text) {
-    (aboutSection, aboutImageUrl);
+  public query ({ caller }) func getAboutSection() : async (Text, AboutImage) {
+    (aboutSection, aboutImage);
   };
 
   public query ({ caller }) func getAllClinics() : async [(Nat, Clinic)] {
@@ -303,10 +341,6 @@ actor {
 
   public query ({ caller }) func getFooterContent() : async Text {
     footerContent;
-  };
-
-  public query ({ caller }) func getAboutImageBase64() : async Text {
-    aboutImageBase64;
   };
 
   public query ({ caller }) func getHeaderImageBase64() : async Text {
@@ -329,21 +363,23 @@ actor {
 
   // ── Admin Write Endpoints — About Section ────────────────────────────────────
 
-  public shared ({ caller }) func updateAboutSection(text : Text, imageUrl : Text, sessionToken : Text) : async () {
+  public shared ({ caller }) func updateAboutSection(text : Text, sessionToken : Text) : async () {
     requireValidSession(sessionToken);
     aboutSection := text;
-    aboutImageUrl := imageUrl;
   };
 
-  public shared ({ caller }) func updateAboutImageBase64(imageBase64 : Text, sessionToken : Text) : async () {
+  public shared ({ caller }) func updateAboutImage(newImage : AboutImage, sessionToken : Text) : async () {
     requireValidSession(sessionToken);
-    aboutImageBase64 := imageBase64;
+    aboutImage := newImage;
   };
 
   public shared ({ caller }) func deleteAboutImage(sessionToken : Text) : async () {
     requireValidSession(sessionToken);
-    aboutImageBase64 := "";
-    aboutImageUrl := "";
+    aboutImage := {
+      imageUrl = "";
+      imageBase64 = "";
+      imageType = "url";
+    };
   };
 
   // ── Admin Write Endpoints — Header Image ─────────────────────────────────────

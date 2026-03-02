@@ -2,10 +2,17 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-redesign-the-footer-component-to-be-advanced-structured-and-visually-consistent-with-the-rest-of-the-ui-warm-neutral-tones-teal-accents-card-based-aesthetic-the-footer-should-include-multiple-columns-a-branding-bio-column-a-quick-navigation-links-column-a-contact-clinic-info-column-and-a-social-media-links-column-add-a-bottom-bar-with-copyright-text-and-a-divider-match-typography-color-tokens-and-spacing-conventions-used-in-header-and-section-components",
-      "featureTitle": "Redesign the Footer component to be advanced, structured, and visually consistent with the rest of the UI (warm neutral tones, teal accents, card-based aesthetic). The footer should include multiple columns: a branding/bio column, a quick navigation links column, a contact/clinic info column, and a social media links column. Add a bottom bar with copyright text and a divider. Match typography, color tokens, and spacing conventions used in Header and section components.",
+      "featureId": "feature-make-the-entire-public-facing-site-fully-responsive-on-mobile-devices-audit-and-fix-all-layout-spacing-typography-and-component-issues-across-header-navigation-anchor-links-admin-panel-link-home-hero-section-particle-canvas-hero-image-site-title-about-section-two-column-layout-should-stack-vertically-on-mobile-services-grid-clinics-grid-socialmedia-section-and-footer-ensure-touch-targets-are-adequately-sized-text-does-not-overflow-images-scale-correctly-and-grid-flex-layouts-collapse-gracefully-at-small-screen-widths-sm-breakpoint-and-below",
+      "featureTitle": "Make the entire public-facing site fully responsive on mobile devices. Audit and fix all layout, spacing, typography, and component issues across: Header (navigation, anchor links, admin panel link), Home/Hero section (particle canvas, hero image, site title), About section (two-column layout should stack vertically on mobile), Services grid, Clinics grid, SocialMedia section, and Footer. Ensure touch targets are adequately sized, text does not overflow, images scale correctly, and grid/flex layouts collapse gracefully at small screen widths (sm breakpoint and below).",
       "files": [
-        "frontend/src/components/Footer.tsx"
+        "frontend/src/components/ClinicCard.tsx",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/pages/About.tsx",
+        "frontend/src/pages/Clinics.tsx",
+        "frontend/src/pages/Home.tsx",
+        "frontend/src/pages/Services.tsx",
+        "frontend/src/pages/SocialMedia.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -22,19 +29,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-import-the-roboto-font-from-google-fonts-in-index-html-and-or-index-css-and-apply-it-as-the-primary-font-for-all-headings-h1-h6-and-section-titles-across-the-entire-application-including-the-header-hero-section-about-services-clinics-socialmedia-pages-and-footer-update-the-tailwind-config-fontfamily-to-reference-roboto-for-the-heading-display-font-stack",
-      "featureTitle": "Import the Roboto font from Google Fonts (in index.html and/or index.css) and apply it as the primary font for all headings (h1–h6) and section titles across the entire application, including the Header, Hero section, About, Services, Clinics, SocialMedia pages, and Footer. Update the Tailwind config fontFamily to reference Roboto for the heading/display font stack.",
+      "featureId": "feature-in-the-adminpanel-page-and-header-component-change-the-admin-login-button-label-from-admin-to-login-the-button-s-behavior-styling-and-all-authentication-session-logic-must-remain-exactly-the-same-only-the-visible-text-label-changes",
+      "featureTitle": "In the AdminPanel page and Header component, change the admin login button label from 'Admin' to 'Login'. The button's behavior, styling, and all authentication/session logic must remain exactly the same — only the visible text label changes.",
       "files": [
-        "frontend/index.html",
-        "frontend/src/components/Footer.tsx",
-        "frontend/src/components/Header.tsx",
-        "frontend/src/index.css",
-        "frontend/src/pages/About.tsx",
-        "frontend/src/pages/Clinics.tsx",
-        "frontend/src/pages/Home.tsx",
-        "frontend/src/pages/Services.tsx",
-        "frontend/src/pages/SocialMedia.tsx",
-        "frontend/tailwind.config.js"
+        "frontend/src/components/Header.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -47,49 +45,6 @@
       ],
       "testIds": [
         "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-expand-the-herosettingseditor-admin-component-into-a-powerful-comprehensive-hero-theme-settings-panel-it-should-include-gradient-start-and-end-color-pickers-overlay-opacity-slider-text-color-selector-background-blur-toggle-glassmorphism-intensity-slider-hero-height-selector-options-compact-normal-full-screen-animation-speed-control-enable-disable-mouse-parallax-toggle-and-a-live-preview-thumbnail-of-the-combined-settings-persist-all-new-fields-via-the-updateherosettings-backend-mutation-and-ensure-the-home-hero-page-reads-and-applies-all-settings",
-      "featureTitle": "Expand the HeroSettingsEditor admin component into a powerful, comprehensive hero theme settings panel. It should include: gradient start and end color pickers, overlay opacity slider, text color selector, background blur toggle, glassmorphism intensity slider, hero height selector (options: compact/normal/full-screen), animation speed control, enable/disable mouse parallax toggle, and a live preview thumbnail of the combined settings. Persist all new fields via the updateHeroSettings backend mutation and ensure the Home/Hero page reads and applies all settings.",
-      "files": [
-        "frontend/src/components/admin/HeroSettingsEditor.tsx",
-        "frontend/src/pages/Home.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-an-advanced-particle-effect-selection-system-in-the-herosettingseditor-admin-panel-provide-a-gallery-grid-of-named-particle-presets-the-admin-can-choose-from-including-at-minimum-none-floating-dots-stars-snow-bubbles-geometric-shapes-dna-helix-medical-pulse-confetti-and-fireflies-each-preset-should-display-a-small-animated-preview-thumbnail-additionally-expose-fine-tuning-controls-for-the-selected-preset-particle-count-slider-particle-size-range-particle-speed-slider-particle-color-picker-and-particle-opacity-slider-implement-the-actual-particle-animations-in-the-particlecanvas-component-on-the-hero-section-using-canvas-based-or-css-animation-rendering",
-      "featureTitle": "Implement an advanced particle effect selection system in the HeroSettingsEditor admin panel. Provide a gallery/grid of named particle presets the admin can choose from, including at minimum: None, Floating Dots, Stars, Snow, Bubbles, Geometric Shapes, DNA Helix, Medical Pulse, Confetti, and Fireflies. Each preset should display a small animated preview thumbnail. Additionally, expose fine-tuning controls for the selected preset: particle count slider, particle size range, particle speed slider, particle color picker, and particle opacity slider. Implement the actual particle animations in the ParticleCanvas component on the hero section using canvas-based or CSS animation rendering.",
-      "files": [
-        "frontend/src/components/ParticleCanvas.tsx",
-        "frontend/src/components/admin/HeroSettingsEditor.tsx",
-        "frontend/src/pages/Home.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
       ],
       "confidence": "high"
     }

@@ -1,137 +1,102 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Advanced Footer, Roboto Headings, Hero Theme Settings & Particle Effects",
+  "title": "Mobile Responsiveness Fixes & Admin Login Button Label Update",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Redesign Footer component with multi-column layout, social links, and visual consistency",
+      "summary": "Make the entire public-facing site fully responsive on mobile devices",
       "acceptanceCriteria": [
-        "Footer renders a multi-column layout (branding, navigation, contact, social)",
-        "Footer uses the same color palette, spacing, and border/shadow styles as the rest of the UI",
-        "A bottom bar with copyright text and a horizontal divider is present",
-        "Social media icons are displayed and link correctly",
-        "Footer is fully responsive (stacks columns on mobile)"
+        "All public pages render correctly on 375px wide viewport (mobile)",
+        "No horizontal overflow or clipped content on mobile",
+        "Two-column About section layout stacks to single column on mobile",
+        "Services and Clinics grids collapse to 1 column on mobile",
+        "Header navigation is accessible and usable on mobile",
+        "Footer renders correctly without overflow on mobile",
+        "Touch targets (buttons, links) are at least 44px in height/width on mobile"
       ],
       "file_operations": [
         {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Audit and fix mobile responsiveness for the header component. Ensure navigation links, anchor links, and admin panel link are accessible on mobile. Fix touch target sizes to be at least 44px. Update responsive classes for mobile viewport (sm breakpoint). Ensure scroll-aware background blur works correctly on mobile and that the header doesn't cause horizontal overflow."
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "Fix mobile responsiveness for the hero section. Ensure the ParticleCanvas component scales correctly on mobile. Verify the hero image (frontend/public/assets/generated/hero-bg.dim_1920x1080.png or hero-bg.dim_1440x800.png) scales appropriately without overflow. Adjust site title typography and spacing for mobile viewports. Ensure the optional glow effect renders correctly on small screens."
+        },
+        {
+          "path": "frontend/src/pages/About.tsx",
+          "operation": "modify",
+          "description": "Fix mobile layout for the About section. Convert the two-column layout to stack vertically on mobile (sm breakpoint and below). Ensure the profile image scales correctly and doesn't overflow. Fix text typography and spacing for mobile devices. Verify decorative accents render properly without causing layout issues on small screens."
+        },
+        {
+          "path": "frontend/src/pages/Services.tsx",
+          "operation": "modify",
+          "description": "Fix mobile responsiveness for the services grid. Ensure the grid collapses to a single column on mobile (sm breakpoint and below). Verify service cards render correctly with proper spacing and that icons display properly at mobile sizes. Ensure loading skeletons are also responsive and match the mobile grid layout."
+        },
+        {
+          "path": "frontend/src/pages/Clinics.tsx",
+          "operation": "modify",
+          "description": "Fix mobile responsiveness for the clinics grid. Ensure the grid collapses to a single column on mobile (sm breakpoint and below). Verify ClinicCard components render correctly on small screens with proper spacing. Ensure loading skeletons match the mobile grid layout."
+        },
+        {
+          "path": "frontend/src/components/ClinicCard.tsx",
+          "operation": "modify",
+          "description": "Fix mobile layout and touch targets for clinic cards. Ensure all text content (name, description, address, phone) wraps correctly and doesn't overflow on mobile. Make action buttons (booking, map) have adequate touch target sizes (at least 44px). Verify card spacing and padding work on small screens."
+        },
+        {
+          "path": "frontend/src/pages/SocialMedia.tsx",
+          "operation": "modify",
+          "description": "Fix mobile responsiveness for the social media links section. Ensure links have adequate touch target sizes (at least 44px). Verify the layout and spacing work correctly on small screens. Ensure platform icons and text render properly without overflow on mobile."
+        },
+        {
           "path": "frontend/src/components/Footer.tsx",
           "operation": "modify",
-          "description": "Redesign Footer to include a multi-column layout with four distinct sections: branding/bio column (doctor name, short tagline), quick navigation links column (smooth-scroll links to Home, About, Services, Clinics, Social sections), contact/clinic info column (phone, email, address if applicable), and social media links column. Add a bottom bar below the columns with a horizontal divider and copyright text. Match the warm neutral tones (OKLCH colors from tailwind.config.js), teal accents, card-based aesthetic (border, shadow, rounded corners) used in Header and other section components. Ensure responsive design where columns stack vertically on mobile. Fetch content and social links from useGetAllContent hook and wire the admin-editable footer description into the branding column."
+          "description": "Fix mobile responsiveness for the footer component. Ensure the particle canvas effect scales correctly on mobile. Verify optional glow orbs render properly on small screens. Ensure footer text content wraps correctly and doesn't cause horizontal overflow on mobile viewports. Fix any spacing or padding issues for mobile devices."
+        },
+        {
+          "path": "frontend/src/components/ParticleCanvas.tsx",
+          "operation": "modify",
+          "description": "Fix canvas scaling and rendering on mobile devices. Ensure the particle system performs well on mobile and the canvas element doesn't cause horizontal overflow. Verify mouse interaction (if enabled) works with touch events on mobile. Adjust particle rendering parameters if needed for mobile performance."
+        },
+        {
+          "path": "frontend/src/components/GlassCard.tsx",
+          "operation": "modify",
+          "description": "Fix mobile responsiveness for glassmorphism card styling. Ensure padding, border radius, and hover effects work appropriately on mobile devices. Verify the card doesn't cause layout issues on small screens."
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Add or update mobile-specific utility classes and media queries as needed to support responsive fixes across all components. Ensure glassmorphism card classes, gradient text, and other reusable styles work correctly at mobile breakpoints. Add any missing responsive utilities needed by the component fixes."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Review and adjust Tailwind breakpoint configuration if needed to ensure sm breakpoint and responsive utilities are properly configured for mobile responsiveness. Verify custom utilities (glow shadows, animations) work correctly at mobile sizes."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Import Roboto font and apply it to all headings across the application",
+      "summary": "Change the admin login button label from 'Admin' to 'Login'",
       "acceptanceCriteria": [
-        "Roboto font is loaded from Google Fonts",
-        "All h1–h6 elements and explicit heading/title classes use Roboto",
-        "Tailwind config reflects Roboto in the font family configuration",
-        "No heading in the app falls back to a non-Roboto font when Roboto is available"
+        "The admin panel access button displays 'Login' as its label",
+        "Clicking the button still navigates to the admin panel / triggers the login flow as before",
+        "No changes to authentication logic, session storage, or login form behavior",
+        "Button styling remains unchanged"
       ],
       "file_operations": [
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Add a Google Fonts link tag in the <head> section to load the Roboto font family (multiple weights: 400, 500, 700). Place it alongside the existing Space Grotesk and Inter font imports."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Import Roboto from Google Fonts using @import if not already imported via HTML, and define a global CSS rule targeting all heading elements (h1, h2, h3, h4, h5, h6) to set font-family: 'Roboto', sans-serif. Ensure this rule has sufficient specificity to override default Tailwind typography."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Update the theme.extend.fontFamily configuration to add a 'heading' or 'display' font stack with Roboto as the primary font. Reference this custom font family in components that render headings. Ensure the existing fontFamily.sans (Inter) and fontFamily.mono (Space Grotesk) remain unchanged, so body text continues to use Inter while headings use Roboto."
-        },
         {
           "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Apply the Roboto heading font class (e.g., font-heading or explicit font-['Roboto']) to the site title text element in the header. Verify that the doctor name/site title displays in Roboto."
+          "description": "Update the admin panel access button label from 'Admin' to 'Login' in both desktop and mobile layouts. Keep all other button properties (styling, navigation behavior, click handlers) exactly the same. Do not modify any authentication, session, or routing logic."
         },
         {
-          "path": "frontend/src/pages/Home.tsx",
+          "path": "frontend/src/pages/AdminPanel.tsx",
           "operation": "modify",
-          "description": "Apply the Roboto heading font class to the hero section's main title (EditableField for siteTitle) and any other heading elements in the hero. Ensure the tagline or subtitle also uses Roboto if it is styled as a heading."
-        },
-        {
-          "path": "frontend/src/pages/About.tsx",
-          "operation": "modify",
-          "description": "Apply the Roboto heading font class to the 'About Me' section title and any credential card headings. Ensure all h2/h3 elements in the About page use Roboto."
-        },
-        {
-          "path": "frontend/src/pages/Services.tsx",
-          "operation": "modify",
-          "description": "Apply the Roboto heading font class to the 'What I Offer' section title and individual service card titles. Ensure all service headings render in Roboto."
-        },
-        {
-          "path": "frontend/src/pages/Clinics.tsx",
-          "operation": "modify",
-          "description": "Apply the Roboto heading font class to the 'Our Clinics' section title and individual clinic card headings. Ensure all clinic name headings use Roboto."
-        },
-        {
-          "path": "frontend/src/pages/SocialMedia.tsx",
-          "operation": "modify",
-          "description": "Apply the Roboto heading font class to the 'Follow & Connect' section title. Ensure the social media section heading uses Roboto."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Apply the Roboto heading font class to the footer's branding/bio column heading (doctor name or site title) and any column subheadings. Ensure footer headings use Roboto for visual consistency."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Expand HeroSettingsEditor with comprehensive theme controls and live preview",
-      "acceptanceCriteria": [
-        "HeroSettingsEditor displays all new controls: gradient pickers, overlay opacity, text color, blur toggle, glassmorphism slider, height selector, animation speed, mouse parallax toggle",
-        "A live preview thumbnail reflects the current settings combination",
-        "All settings are persisted to the backend and reloaded on page load",
-        "The Hero section on the public page correctly applies all saved theme settings",
-        "Controls are grouped logically with clear labels and sections"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/admin/HeroSettingsEditor.tsx",
-          "operation": "modify",
-          "description": "Expand the HeroSettingsEditor component to include new UI controls: two color pickers for bgGradientStart and bgGradientEnd, a slider for overlayOpacity (0–100%), a color picker for textColor, a toggle for backgroundBlur, a slider for glassmorphismIntensity (0–100%), a dropdown/select for heroHeight (options: 'compact', 'normal', 'full-screen'), a slider for animationSpeed (0–10), and a toggle for mouseParallaxEnabled. Organize these controls into logical sections (Background, Overlay, Text, Effects, Interactions). Add a live preview thumbnail area that renders a miniature version of the hero section reflecting the current settings (use a scaled-down div with inline styles mirroring the gradient, overlay, blur, etc.). Ensure all fields are bound to the IdleHeroSettings type from the backend interface. Use the useUpdateHeroSettings mutation to persist changes. Fetch current settings on mount using useGetHeroSettings and populate the form fields. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Update the Home/Hero page component to read and apply all hero theme settings from the backend: apply bgGradientStart and bgGradientEnd as a CSS linear-gradient background, apply overlayOpacity as an overlay layer opacity, apply textColor to the title and tagline text, conditionally apply a backdrop-blur class if backgroundBlur is true, apply glassmorphismIntensity as a translucent overlay with varying opacity, apply heroHeight to set the hero section height (e.g., min-h-[50vh] for compact, min-h-screen for full-screen), apply animationSpeed to control CSS animation duration, and conditionally apply mouse parallax effect if mouseParallaxEnabled is true (use mouse move event listeners to adjust background position or element transforms). Fetch hero settings using useGetHeroSettings and apply styles dynamically via inline styles or Tailwind classes. Ensure the hero section updates when settings are saved in the admin panel (use React Query cache invalidation)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Implement advanced particle effect selection system with presets and fine-tuning controls",
-      "acceptanceCriteria": [
-        "Admin particle settings panel shows a grid of at least 10 named presets with animated preview thumbnails",
-        "Selected preset name is saved to hero settings in the backend",
-        "Fine-tuning controls (count, size, speed, color, opacity) are present and functional",
-        "ParticleCanvas component renders the selected particle preset with fine-tuned parameters on the Hero section",
-        "Changing preset in admin updates the live hero section after save",
-        "'None' preset disables all particles cleanly"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/admin/HeroSettingsEditor.tsx",
-          "operation": "modify",
-          "description": "Add a particle effect selection section to the HeroSettingsEditor. Display a grid of at least 10 named particle presets: 'None', 'Floating Dots', 'Stars', 'Snow', 'Bubbles', 'Geometric Shapes', 'DNA Helix', 'Medical Pulse', 'Confetti', 'Fireflies'. For each preset, render a small card with a label and an animated preview thumbnail (use a mini canvas or CSS animation to show a representative particle animation). Allow the admin to select a preset by clicking on it, updating the particlePreset field in the hero settings. Below the preset grid, add fine-tuning controls: a slider for particleCount (10–500), a min/max range slider for particleMinSize and particleMaxSize (1–50px), a slider for particleSpeed (0.1–10), a color picker for particleColor, and a slider for particleOpacity (0–100%). Ensure all fields are bound to the IdleHeroSettings type. Use the useUpdateHeroSettings mutation to persist the selected preset and fine-tuning parameters. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/ParticleCanvas.tsx",
-          "operation": "modify",
-          "description": "Implement the ParticleCanvas component to render client-side particle animations on a canvas element overlaying the hero section. Accept props for the selected particle preset name, particle count, particle size range (min/max), particle speed, particle color, and particle opacity. Use the canvas 2D rendering context or CSS animations to draw particles based on the preset. Implement at least 10 presets: 'None' (render nothing), 'Floating Dots' (circular particles drifting slowly), 'Stars' (twinkling star shapes), 'Snow' (falling snowflakes), 'Bubbles' (rising circular bubbles), 'Geometric Shapes' (rotating triangles/squares), 'DNA Helix' (double-helix spiral pattern), 'Medical Pulse' (pulsing cross/plus symbols), 'Confetti' (falling colorful squares), 'Fireflies' (glowing dots with opacity fade). Use requestAnimationFrame for smooth animation. Apply fine-tuned parameters (count, size, speed, color, opacity) to each particle. Ensure the canvas is positioned absolutely over the hero background and does not block user interaction with the hero content (use pointer-events: none). Fetch particle settings from the hero settings and re-render when settings change. Optimize performance to avoid frame drops with high particle counts."
-        },
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Wire the ParticleCanvas component into the Home/Hero section. Fetch hero settings using useGetHeroSettings and pass the particle-related fields (particlePreset, particleCount, particleMinSize, particleMaxSize, particleSpeed, particleColor, particleOpacity) as props to ParticleCanvas. Render ParticleCanvas as an overlay layer on top of the hero background but below the hero text content. Ensure the particle canvas spans the full hero section dimensions. If particlePreset is 'None', do not render ParticleCanvas or render it with no particles to avoid unnecessary computation. Ensure the particle effect updates when the admin saves new particle settings (React Query cache invalidation will trigger a re-fetch and re-render)."
+          "description": "If AdminPanel.tsx contains any button or link with the 'Admin' label that should be changed to 'Login', update it here. Otherwise, ensure no changes are needed. Keep all authentication state management, session token handling, and login/dashboard switching logic unchanged."
         }
       ]
     }

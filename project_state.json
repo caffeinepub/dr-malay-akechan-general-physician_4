@@ -1,42 +1,26 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Doctor-oriented UI project with premium styling. User is refining the UI with consistent advanced footer, Roboto font for headings, hero theme settings in admin, and advanced particle effect selection.",
-  "architectural_notes": [
-    "UI is doctor-oriented with premium styling using Roboto as the heading font"
+  "summary": "Project with existing admin panel and image upload features. User requests mobile responsiveness fixes and UI label updates.",
+  "architectural_notes": [],
+  "known_issues": [
+    "UI not rendering properly on mobile devices"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-redesign-the-footer-component-to-be-advanced-structured-and-visually-consistent-with-the-rest-of-the-ui-warm-neutral-tones-teal-accents-card-based-aesthetic-the-footer-should-include-multiple-columns-a-branding-bio-column-a-quick-navigation-links-column-a-contact-clinic-info-column-and-a-social-media-links-column-add-a-bottom-bar-with-copyright-text-and-a-divider-match-typography-color-tokens-and-spacing-conventions-used-in-header-and-section-components",
-      "title": "Redesign the Footer component to be advanced, structured, and visually consistent with the rest of the UI (warm neutral tones, teal accents, card-based aesthetic). The footer should include multiple columns: a branding/bio column, a quick navigation links column, a contact/clinic info column, and a social media links column. Add a bottom bar with copyright text and a divider. Match typography, color tokens, and spacing conventions used in Header and section components.",
+      "id": "feature-make-the-entire-public-facing-site-fully-responsive-on-mobile-devices-audit-and-fix-all-layout-spacing-typography-and-component-issues-across-header-navigation-anchor-links-admin-panel-link-home-hero-section-particle-canvas-hero-image-site-title-about-section-two-column-layout-should-stack-vertically-on-mobile-services-grid-clinics-grid-socialmedia-section-and-footer-ensure-touch-targets-are-adequately-sized-text-does-not-overflow-images-scale-correctly-and-grid-flex-layouts-collapse-gracefully-at-small-screen-widths-sm-breakpoint-and-below",
+      "title": "Make the entire public-facing site fully responsive on mobile devices. Audit and fix all layout, spacing, typography, and component issues across: Header (navigation, anchor links, admin panel link), Home/Hero section (particle canvas, hero image, site title), About section (two-column layout should stack vertically on mobile), Services grid, Clinics grid, SocialMedia section, and Footer. Ensure touch targets are adequately sized, text does not overflow, images scale correctly, and grid/flex layouts collapse gracefully at small screen widths (sm breakpoint and below).",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-import-the-roboto-font-from-google-fonts-in-index-html-and-or-index-css-and-apply-it-as-the-primary-font-for-all-headings-h1-h6-and-section-titles-across-the-entire-application-including-the-header-hero-section-about-services-clinics-socialmedia-pages-and-footer-update-the-tailwind-config-fontfamily-to-reference-roboto-for-the-heading-display-font-stack",
-      "title": "Import the Roboto font from Google Fonts (in index.html and/or index.css) and apply it as the primary font for all headings (h1–h6) and section titles across the entire application, including the Header, Hero section, About, Services, Clinics, SocialMedia pages, and Footer. Update the Tailwind config fontFamily to reference Roboto for the heading/display font stack.",
+      "id": "feature-in-the-adminpanel-page-and-header-component-change-the-admin-login-button-label-from-admin-to-login-the-button-s-behavior-styling-and-all-authentication-session-logic-must-remain-exactly-the-same-only-the-visible-text-label-changes",
+      "title": "In the AdminPanel page and Header component, change the admin login button label from 'Admin' to 'Login'. The button's behavior, styling, and all authentication/session logic must remain exactly the same — only the visible text label changes.",
       "reqIds": [
         "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-expand-the-herosettingseditor-admin-component-into-a-powerful-comprehensive-hero-theme-settings-panel-it-should-include-gradient-start-and-end-color-pickers-overlay-opacity-slider-text-color-selector-background-blur-toggle-glassmorphism-intensity-slider-hero-height-selector-options-compact-normal-full-screen-animation-speed-control-enable-disable-mouse-parallax-toggle-and-a-live-preview-thumbnail-of-the-combined-settings-persist-all-new-fields-via-the-updateherosettings-backend-mutation-and-ensure-the-home-hero-page-reads-and-applies-all-settings",
-      "title": "Expand the HeroSettingsEditor admin component into a powerful, comprehensive hero theme settings panel. It should include: gradient start and end color pickers, overlay opacity slider, text color selector, background blur toggle, glassmorphism intensity slider, hero height selector (options: compact/normal/full-screen), animation speed control, enable/disable mouse parallax toggle, and a live preview thumbnail of the combined settings. Persist all new fields via the updateHeroSettings backend mutation and ensure the Home/Hero page reads and applies all settings.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-an-advanced-particle-effect-selection-system-in-the-herosettingseditor-admin-panel-provide-a-gallery-grid-of-named-particle-presets-the-admin-can-choose-from-including-at-minimum-none-floating-dots-stars-snow-bubbles-geometric-shapes-dna-helix-medical-pulse-confetti-and-fireflies-each-preset-should-display-a-small-animated-preview-thumbnail-additionally-expose-fine-tuning-controls-for-the-selected-preset-particle-count-slider-particle-size-range-particle-speed-slider-particle-color-picker-and-particle-opacity-slider-implement-the-actual-particle-animations-in-the-particlecanvas-component-on-the-hero-section-using-canvas-based-or-css-animation-rendering",
-      "title": "Implement an advanced particle effect selection system in the HeroSettingsEditor admin panel. Provide a gallery/grid of named particle presets the admin can choose from, including at minimum: None, Floating Dots, Stars, Snow, Bubbles, Geometric Shapes, DNA Helix, Medical Pulse, Confetti, and Fireflies. Each preset should display a small animated preview thumbnail. Additionally, expose fine-tuning controls for the selected preset: particle count slider, particle size range, particle speed slider, particle color picker, and particle opacity slider. Implement the actual particle animations in the ParticleCanvas component on the hero section using canvas-based or CSS animation rendering.",
-      "reqIds": [
-        "REQ-4"
       ],
       "version": 1
     }
@@ -44,31 +28,19 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Make footer consistent with the rest of the UI, advanced and structured",
+      "summary": "Make the UI fully responsive on mobile",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Use Roboto font for all headings across the UI",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Add powerful hero theme settings in the admin section",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Add advanced particle effect selection abilities",
+      "summary": "Change admin login button label from 'Admin' to 'Login'",
       "reqIds": [],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "Doctor Portfolio",
+  "projectName": "MedSite Admin",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

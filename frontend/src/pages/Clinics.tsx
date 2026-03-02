@@ -1,37 +1,76 @@
 import React from 'react';
-import { useGetAllContent } from '../hooks/useQueries';
 import ClinicCard from '../components/ClinicCard';
-import { MapPin } from 'lucide-react';
+import { useGetAllContent } from '../hooks/useQueries';
 
-interface Props {
-  onUpdateClinicName?: (id: bigint, name: string) => Promise<void>;
-  onUpdateClinicDescription?: (id: bigint, description: string) => Promise<void>;
-}
+export default function Clinics() {
+  const { data: content, isLoading } = useGetAllContent();
 
-export default function Clinics({ onUpdateClinicName, onUpdateClinicDescription }: Props) {
-  const { data: content } = useGetAllContent();
-  const clinics = content?.clinics || [];
+  if (!isLoading && (!content?.clinics || content.clinics.length === 0)) {
+    return null;
+  }
 
   return (
-    <section id="clinics" className="py-24 bg-background">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <p className="text-xs font-semibold font-heading uppercase tracking-widest text-primary mb-2">Locations</p>
-          <h2 className="text-4xl md:text-5xl font-bold font-heading text-foreground">
+    <section
+      id="clinics"
+      className="py-16 sm:py-24 relative"
+      style={{ background: 'oklch(0.10 0.018 240)' }}
+    >
+      {/* Top border accent */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px"
+        style={{ background: 'linear-gradient(90deg, transparent, oklch(0.72 0.18 195 / 0.40), transparent)' }}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center mb-10 sm:mb-16">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div
+              className="h-px w-12"
+              style={{ background: 'linear-gradient(90deg, transparent, oklch(0.72 0.18 195))' }}
+            />
+            <span
+              className="text-sm font-semibold tracking-widest uppercase"
+              style={{ color: 'oklch(0.72 0.18 195)' }}
+            >
+              Locations
+            </span>
+            <div
+              className="h-px w-12"
+              style={{ background: 'linear-gradient(90deg, oklch(0.72 0.18 195), transparent)' }}
+            />
+          </div>
+          <h2
+            className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4"
+            style={{ color: 'oklch(0.96 0.012 220)' }}
+          >
             Our Clinics
           </h2>
-          <div className="w-16 h-0.5 mx-auto mt-4 bg-gradient-to-r from-transparent via-primary to-transparent" />
+          <p
+            className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
+            style={{ color: 'oklch(0.78 0.012 220)' }}
+          >
+            Find a clinic near you and book your appointment today.
+          </p>
         </div>
 
-        {clinics.length === 0 ? (
-          <div className="text-center text-muted-foreground py-16">
-            <MapPin className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p>No clinics listed yet.</p>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="glass-card p-5 sm:p-6 animate-pulse space-y-4"
+              >
+                <div className="h-6 rounded w-1/2" style={{ background: 'oklch(0.20 0.022 240)' }} />
+                <div className="h-4 rounded" style={{ background: 'oklch(0.20 0.022 240)' }} />
+                <div className="h-4 rounded w-3/4" style={{ background: 'oklch(0.20 0.022 240)' }} />
+                <div className="h-4 rounded w-1/2" style={{ background: 'oklch(0.20 0.022 240)' }} />
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clinics.map(([id, clinic]) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {content?.clinics.map(([id, clinic]) => (
               <ClinicCard
                 key={id.toString()}
                 id={id}
@@ -41,8 +80,6 @@ export default function Clinics({ onUpdateClinicName, onUpdateClinicDescription 
                 phone={clinic.phone}
                 mapUrl={clinic.mapUrl}
                 bookingUrl={clinic.bookingUrl}
-                onUpdateName={onUpdateClinicName}
-                onUpdateDescription={onUpdateClinicDescription}
               />
             ))}
           </div>
